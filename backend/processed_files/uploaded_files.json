@@ -1,0 +1,50 @@
+{
+  "b4a78bb7b470259e963719941c858b5fa70093386c183f797dd5a9a01b32f33e": {
+    "nombre": "bice-noviembre.pdf",
+    "fecha_carga": "2026-02-25T17:37:48.243574",
+    "movimientos": 22,
+    "hash": "b4a78bb7b470259e963719941c858b5fa70093386c183f797dd5a9a01b32f33e"
+  },
+  "2422d6a7000be61e281e3615c3f474d7dccd336184f01cdb43041f249b9c431d": {
+    "nombre": "cmr-noviembre.pdf",
+    "fecha_carga": "2026-02-25T17:37:55.373778",
+    "movimientos": 107,
+    "hash": "2422d6a7000be61e281e3615c3f474d7dccd336184f01cdb43041f249b9c431d"
+  },
+  "0fdda11b500d97b6b403e887be659a06cc74a19c7e345fee9fb12b3e3491c77d": {
+    "nombre": "santander-noviembre.pdf",
+    "fecha_carga": "2026-02-25T17:37:59.368367",
+    "movimientos": 1,
+    "hash": "0fdda11b500d97b6b403e887be659a06cc74a19c7e345fee9fb12b3e3491c77d"
+  },
+  "713c953d8891a20f84e0a1d91eb7f34e453a06f12acedc07c6f148d706d798b2": {
+    "nombre": "TCsantander-noviembre.pdf",
+    "fecha_carga": "2026-02-25T17:38:03.228885",
+    "movimientos": 8,
+    "hash": "713c953d8891a20f84e0a1d91eb7f34e453a06f12acedc07c6f148d706d798b2"
+  },
+  "1e439efd203c31ff8d9fa0aa8406d8c9a940a221546f3879be1ea561e4f40392": {
+    "nombre": "bice-octubre.pdf",
+    "fecha_carga": "2026-02-25T17:41:48.192641",
+    "movimientos": 22,
+    "hash": "1e439efd203c31ff8d9fa0aa8406d8c9a940a221546f3879be1ea561e4f40392"
+  },
+  "d2f2aa8ead233e37956f6f4e90e7f79a4c132effb2a77fc9f45980a13b96b2b8": {
+    "nombre": "cmr-octubre.pdf",
+    "fecha_carga": "2026-02-25T17:41:48.740607",
+    "movimientos": 76,
+    "hash": "d2f2aa8ead233e37956f6f4e90e7f79a4c132effb2a77fc9f45980a13b96b2b8"
+  },
+  "8d4c1f9735c4d4c7a3e8f445d6ac9eca0bd16b70a1827c269014fde6e81cad93": {
+    "nombre": "santander-octubre.pdf",
+    "fecha_carga": "2026-02-25T17:41:49.187552",
+    "movimientos": 1,
+    "hash": "8d4c1f9735c4d4c7a3e8f445d6ac9eca0bd16b70a1827c269014fde6e81cad93"
+  },
+  "88224ee9052f2035f754c83e5359abeee68b15d9acbc19056c8a86c3432f12cf": {
+    "nombre": "TCsantander-octubre.pdf",
+    "fecha_carga": "2026-02-25T17:41:49.673172",
+    "movimientos": 8,
+    "hash": "88224ee9052f2035f754c83e5359abeee68b15d9acbc19056c8a86c3432f12cf"
+  }
+}
