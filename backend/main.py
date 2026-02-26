@@ -7,6 +7,7 @@ import json
 from datetime import datetime
 import hashlib
 from modules.file_reader import FileReader
+from modules.file_detector import FileDetector
 
 # =====================================================================
 # CONFIGURACIÓN
@@ -18,12 +19,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS - Solo localhost por ahora
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",      # Frontend Vite
+        "http://localhost:3000",      # Alternativa
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type"],
+    max_age=3600,
 )
 
 UPLOAD_DIR = Path("uploads")
@@ -33,12 +41,13 @@ PROCESSED_DIR = Path("processed_files")
 PROCESSED_DIR.mkdir(exist_ok=True)
 
 # Configuración de carga masiva
-MAX_FILES_PER_BATCH = 5  # Máximo de archivos por carga
+MAX_FILES_PER_BATCH = 10  # Máximo de archivos por carga
 MAX_FILE_SIZE_MB = 50  # Máximo tamaño por archivo en MB
 
 uploaded_files_registry = {}
 active_files = set()
 file_reader = FileReader()
+file_detector = FileDetector()
 
 # =====================================================================
 # FUNCIONES AUXILIARES
@@ -61,14 +70,22 @@ def is_file_already_uploaded(file_hash: str) -> dict:
         }
     return {"is_duplicate": False}
 
-def register_uploaded_file(file_hash: str, filename: str, movements_count: int):
+def register_uploaded_file(file_hash: str, filename: str, movements_count: int, detection: dict = None):
     """Registra un archivo como cargado"""
-    uploaded_files_registry[file_hash] = {
+    file_info = {
         "nombre": filename,
         "fecha_carga": datetime.now().isoformat(),
         "movimientos": movements_count,
         "hash": file_hash
     }
+    
+    # Agregar información de detección si está disponible
+    if detection:
+        file_info["institucion"] = detection.get("institution", "unknown")
+        file_info["tipo_producto"] = detection.get("product_type", "unknown")
+        file_info["deteccion_confianza"] = detection.get("confidence", 0.0)
+    
+    uploaded_files_registry[file_hash] = file_info
     save_registry()
 
 def save_registry():
@@ -191,12 +208,20 @@ async def upload_file(file: UploadFile = File(...)):
                     "original_file": {
                         "nombre": file_info['nombre'],
                         "fecha_carga": file_info['fecha_carga'],
-                        "movimientos": file_info['movimientos']
+                        "movimientos": file_info['movimientos'],
+                        "institucion": file_info.get('institucion', 'unknown'),
+                        "tipo_producto": file_info.get('tipo_producto', 'unknown')
                     }
                 }
             )
         
         print(f"✅ Archivo NUEVO")
+        
+        # Detectar institución y tipo de producto automáticamente
+        print(f"🔍 Detectando institución y tipo de producto...")
+        detection = file_detector.detect_from_file(str(temp_path))
+        print(f"🏦 Institución detectada: {detection['institution']} (confianza: {detection['confidence']})")
+        print(f"💳 Tipo de producto: {detection['product_type']}")
         
         # Procesar
         print(f"🔄 Extrayendo movimientos...")
@@ -219,8 +244,14 @@ async def upload_file(file: UploadFile = File(...)):
                 }
             )
         
+        # Agregar información de detección a cada movimiento
+        for movement in movements:
+            movement['institucion'] = detection['institution']
+            movement['tipo_producto'] = detection['product_type']
+            movement['deteccion_confianza'] = detection['confidence']
+        
         # Registrar y activar
-        register_uploaded_file(file_hash, file.filename, len(movements))
+        register_uploaded_file(file_hash, file.filename, len(movements), detection)
         active_files.add(file_hash)
         save_active_files()
         
@@ -237,6 +268,9 @@ async def upload_file(file: UploadFile = File(...)):
                 "message": f"{len(movements)} movimientos extraídos",
                 "file": file.filename,
                 "movements_count": len(movements),
+                "institucion": detection['institution'],
+                "tipo_producto": detection['product_type'],
+                "deteccion_confianza": detection['confidence'],
                 "movements": movements,
                 "file_info": {
                     "hash": file_hash,
@@ -344,6 +378,11 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 duplicates += 1
                 continue
             
+            # Detectar institución y tipo de producto
+            print(f"   🔍 Detectando institución y tipo...")
+            detection = file_detector.detect_from_file(str(temp_path))
+            print(f"   🏦 {detection['institution']} - {detection['product_type']} (confianza: {detection['confidence']})")
+            
             # Procesar
             movements = []
             if file_ext == '.pdf':
@@ -363,8 +402,14 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 errors += 1
                 continue
             
+            # Agregar información de detección a cada movimiento
+            for movement in movements:
+                movement['institucion'] = detection['institution']
+                movement['tipo_producto'] = detection['product_type']
+                movement['deteccion_confianza'] = detection['confidence']
+            
             # Registrar y activar
-            register_uploaded_file(file_hash, file.filename, len(movements))
+            register_uploaded_file(file_hash, file.filename, len(movements), detection)
             active_files.add(file_hash)
             save_active_files()
             
@@ -377,6 +422,9 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 "status": "success",
                 "message": f"{len(movements)} movimientos extraídos",
                 "movements": len(movements),
+                "institucion": detection['institution'],
+                "tipo_producto": detection['product_type'],
+                "deteccion_confianza": detection['confidence'],
                 "activo": True
             })
             
@@ -435,6 +483,9 @@ async def get_uploaded_files():
             "nombre": file_info['nombre'],
             "fecha_carga": file_info['fecha_carga'],
             "movimientos": file_info['movimientos'],
+            "institucion": file_info.get('institucion', 'unknown'),
+            "tipo_producto": file_info.get('tipo_producto', 'unknown'),
+            "deteccion_confianza": file_info.get('deteccion_confianza', 0.0),
             "activo": file_hash in active_files
         })
     
@@ -557,6 +608,11 @@ async def get_movements():
                         movements = file_reader.read_xlsx(str(file_path))
                     
                     if movements:
+                        # Agregar información de institución y tipo a cada movimiento
+                        for movement in movements:
+                            movement['institucion'] = file_info.get('institucion', 'unknown')
+                            movement['tipo_producto'] = file_info.get('tipo_producto', 'unknown')
+                        
                         print(f"   ✅ {filename}: {len(movements)} movimientos")
                         all_movements.extend(movements)
                 except Exception as e:

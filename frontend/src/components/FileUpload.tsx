@@ -32,7 +32,7 @@ export default function FileUpload({ onMovementsLoaded }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const batchInputRef = useRef<HTMLInputElement>(null);
 
-  const MAX_FILES = 5;
+  const MAX_FILES = 10;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

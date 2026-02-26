@@ -1,50 +1,299 @@
 {
-  "b4a78bb7b470259e963719941c858b5fa70093386c183f797dd5a9a01b32f33e": {
-    "nombre": "bice-noviembre.pdf",
-    "fecha_carga": "2026-02-25T17:37:48.243574",
-    "movimientos": 22,
-    "hash": "b4a78bb7b470259e963719941c858b5fa70093386c183f797dd5a9a01b32f33e"
+  "b47d95e5b3a2fe48d6ffc0fcaa3ddd837ba81188c68e62e733f73332b765b21d": {
+    "nombre": "039e48a0-9c23-4dc3-9f92-3d3ecec08dc8.pdf",
+    "fecha_carga": "2026-02-26T16:42:05.953745",
+    "movimientos": 94,
+    "hash": "b47d95e5b3a2fe48d6ffc0fcaa3ddd837ba81188c68e62e733f73332b765b21d",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
   },
-  "2422d6a7000be61e281e3615c3f474d7dccd336184f01cdb43041f249b9c431d": {
-    "nombre": "cmr-noviembre.pdf",
-    "fecha_carga": "2026-02-25T17:37:55.373778",
-    "movimientos": 107,
-    "hash": "2422d6a7000be61e281e3615c3f474d7dccd336184f01cdb43041f249b9c431d"
+  "59b252587ad8c2db669d2ac8aa359060a49e47f7a7cc511f2527668ad50e652f": {
+    "nombre": "746ba295-dec5-4e6c-97cc-681628a1ceda.pdf",
+    "fecha_carga": "2026-02-26T16:42:06.901945",
+    "movimientos": 108,
+    "hash": "59b252587ad8c2db669d2ac8aa359060a49e47f7a7cc511f2527668ad50e652f",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
   },
-  "0fdda11b500d97b6b403e887be659a06cc74a19c7e345fee9fb12b3e3491c77d": {
-    "nombre": "santander-noviembre.pdf",
-    "fecha_carga": "2026-02-25T17:37:59.368367",
-    "movimientos": 1,
-    "hash": "0fdda11b500d97b6b403e887be659a06cc74a19c7e345fee9fb12b3e3491c77d"
+  "791c5e116b69af3af1846ac071e4c36d241b74b986f109b3be5f2c20e6946540": {
+    "nombre": "97212ab6-803e-4b48-8554-35a8406509b3.pdf",
+    "fecha_carga": "2026-02-26T16:42:07.736880",
+    "movimientos": 81,
+    "hash": "791c5e116b69af3af1846ac071e4c36d241b74b986f109b3be5f2c20e6946540",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
   },
-  "713c953d8891a20f84e0a1d91eb7f34e453a06f12acedc07c6f148d706d798b2": {
-    "nombre": "TCsantander-noviembre.pdf",
-    "fecha_carga": "2026-02-25T17:38:03.228885",
+  "bd4c29b858a07a50d11e1284cd562550edc160fa5786b488875ebf62c544d95d": {
+    "nombre": "a5801f2e-543e-4b27-bd67-6fe5a4d45418.pdf",
+    "fecha_carga": "2026-02-26T16:42:08.725422",
+    "movimientos": 122,
+    "hash": "bd4c29b858a07a50d11e1284cd562550edc160fa5786b488875ebf62c544d95d",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "596454f194e3865467060d87668fe1893ebd478d8f505ba47ed5ea7ec6a1d2cc": {
+    "nombre": "b6408f41-7a56-4f5b-897c-0824e4658c75.pdf",
+    "fecha_carga": "2026-02-26T16:42:09.821707",
+    "movimientos": 115,
+    "hash": "596454f194e3865467060d87668fe1893ebd478d8f505ba47ed5ea7ec6a1d2cc",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "4234e7d12bfa8833b7c1bb382cd605ea6b03b9361a5abbefd8b504fa6727319d": {
+    "nombre": "bed01153-da93-4abd-9cd4-36d0d6a75b6d.pdf",
+    "fecha_carga": "2026-02-26T16:42:10.555530",
+    "movimientos": 84,
+    "hash": "4234e7d12bfa8833b7c1bb382cd605ea6b03b9361a5abbefd8b504fa6727319d",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "5dcebede82044925d8c2d6ed0a9c2a886209d65ef877c509fa8d088c9dfc0557": {
+    "nombre": "c28b4945-f37b-4f73-b70f-a2f5ab89b7c5.pdf",
+    "fecha_carga": "2026-02-26T16:42:11.669447",
+    "movimientos": 110,
+    "hash": "5dcebede82044925d8c2d6ed0a9c2a886209d65ef877c509fa8d088c9dfc0557",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "e77c429acee7799c6d2aae0ae78ac731648d8276d546b649e2edaffae338d218": {
+    "nombre": "faa80140-983f-4634-8f8a-c43b950aea68.pdf",
+    "fecha_carga": "2026-02-26T16:42:12.362515",
+    "movimientos": 79,
+    "hash": "e77c429acee7799c6d2aae0ae78ac731648d8276d546b649e2edaffae338d218",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "3228dde77a2ea0ed5fbaf8aaab2c0522a698256fe6f87cf795e2512127dddfe7": {
+    "nombre": "faa80140-agosto.pdf",
+    "fecha_carga": "2026-02-26T16:42:13.419002",
+    "movimientos": 102,
+    "hash": "3228dde77a2ea0ed5fbaf8aaab2c0522a698256fe6f87cf795e2512127dddfe7",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "b1bb28185e3b02e69277578b70e83df6f07b1dc222ebcfe21459307accf5c1cc": {
+    "nombre": "Cartola_21-72804-7_20250530_20250630.pdf",
+    "fecha_carga": "2026-02-26T16:42:26.627241",
+    "movimientos": 14,
+    "hash": "b1bb28185e3b02e69277578b70e83df6f07b1dc222ebcfe21459307accf5c1cc",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
+  },
+  "7a782998c443ee35633c61e1be5b2c84f9d7650a1d485b245b9127ec126c0bab": {
+    "nombre": "Cartola_21-72804-7_20250630_20250731.pdf",
+    "fecha_carga": "2026-02-26T16:42:27.059941",
+    "movimientos": 9,
+    "hash": "7a782998c443ee35633c61e1be5b2c84f9d7650a1d485b245b9127ec126c0bab",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
+  },
+  "515ca53196bc521ddaf92900227b0269b0d9f290cf01b6ca877c4f060f112922": {
+    "nombre": "Cartola_21-72804-7_20250731_20250829.pdf",
+    "fecha_carga": "2026-02-26T16:42:27.346093",
     "movimientos": 8,
-    "hash": "713c953d8891a20f84e0a1d91eb7f34e453a06f12acedc07c6f148d706d798b2"
+    "hash": "515ca53196bc521ddaf92900227b0269b0d9f290cf01b6ca877c4f060f112922",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
   },
-  "1e439efd203c31ff8d9fa0aa8406d8c9a940a221546f3879be1ea561e4f40392": {
-    "nombre": "bice-octubre.pdf",
-    "fecha_carga": "2026-02-25T17:41:48.192641",
-    "movimientos": 22,
-    "hash": "1e439efd203c31ff8d9fa0aa8406d8c9a940a221546f3879be1ea561e4f40392"
+  "2ab9d95067e5e8bcd3e280089945e47c5e3e4dde5f9f9a45989ddfb4a18d53e8": {
+    "nombre": "Cartola_21-72804-7_20250829_20250930.pdf",
+    "fecha_carga": "2026-02-26T16:42:27.730876",
+    "movimientos": 10,
+    "hash": "2ab9d95067e5e8bcd3e280089945e47c5e3e4dde5f9f9a45989ddfb4a18d53e8",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
   },
-  "d2f2aa8ead233e37956f6f4e90e7f79a4c132effb2a77fc9f45980a13b96b2b8": {
-    "nombre": "cmr-octubre.pdf",
-    "fecha_carga": "2026-02-25T17:41:48.740607",
-    "movimientos": 76,
-    "hash": "d2f2aa8ead233e37956f6f4e90e7f79a4c132effb2a77fc9f45980a13b96b2b8"
+  "8ab6dc35aac87074866d396ced2de88f3b6a3465898888fd3d4b7d0f1647d9f1": {
+    "nombre": "Cartola_21-72804-7_20250930_20251030.pdf",
+    "fecha_carga": "2026-02-26T16:42:28.160672",
+    "movimientos": 14,
+    "hash": "8ab6dc35aac87074866d396ced2de88f3b6a3465898888fd3d4b7d0f1647d9f1",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
   },
-  "8d4c1f9735c4d4c7a3e8f445d6ac9eca0bd16b70a1827c269014fde6e81cad93": {
-    "nombre": "santander-octubre.pdf",
-    "fecha_carga": "2026-02-25T17:41:49.187552",
+  "4afc0db190eb3037608b242c89802f8a7e722b1984dd8d7cbb893ffd3cbf3b05": {
+    "nombre": "Cartola_21-72804-7_20251030_20251128.pdf",
+    "fecha_carga": "2026-02-26T16:42:28.517387",
+    "movimientos": 14,
+    "hash": "4afc0db190eb3037608b242c89802f8a7e722b1984dd8d7cbb893ffd3cbf3b05",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "982200916d81329ddc5cc67595fbdbeed4f8dbadc2622e687460ea1dca82cfae": {
+    "nombre": "Cartola_21-72804-7_20251128_20251230.pdf",
+    "fecha_carga": "2026-02-26T16:42:28.988024",
+    "movimientos": 15,
+    "hash": "982200916d81329ddc5cc67595fbdbeed4f8dbadc2622e687460ea1dca82cfae",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
+  },
+  "741b80748727cdf363229891d731f4cecea3f21054c9e1d3709de1f8b4ae4f47": {
+    "nombre": "Cartola_21-72804-7_20251230_20260130.pdf",
+    "fecha_carga": "2026-02-26T16:42:29.317291",
+    "movimientos": 4,
+    "hash": "741b80748727cdf363229891d731f4cecea3f21054c9e1d3709de1f8b4ae4f47",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
+  },
+  "2f9a2844875601495b7bacbfa571839a7c6ac76acd4f73dac01d38acbfba1ac3": {
+    "nombre": "cartola-159.pdf",
+    "fecha_carga": "2026-02-26T16:42:39.456205",
     "movimientos": 1,
-    "hash": "8d4c1f9735c4d4c7a3e8f445d6ac9eca0bd16b70a1827c269014fde6e81cad93"
+    "hash": "2f9a2844875601495b7bacbfa571839a7c6ac76acd4f73dac01d38acbfba1ac3",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 1.0
   },
-  "88224ee9052f2035f754c83e5359abeee68b15d9acbc19056c8a86c3432f12cf": {
-    "nombre": "TCsantander-octubre.pdf",
-    "fecha_carga": "2026-02-25T17:41:49.673172",
-    "movimientos": 8,
-    "hash": "88224ee9052f2035f754c83e5359abeee68b15d9acbc19056c8a86c3432f12cf"
+  "13f8f1f4a8711526d8c3cb8d985beb6b4dcd8017b47c4d2d7f09c98989ae4b51": {
+    "nombre": "cartola-160.pdf",
+    "fecha_carga": "2026-02-26T16:42:39.826365",
+    "movimientos": 1,
+    "hash": "13f8f1f4a8711526d8c3cb8d985beb6b4dcd8017b47c4d2d7f09c98989ae4b51",
+    "institucion": "bice",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 0.9
+  },
+  "f8dd6efaa92028503a90472c2f163a3f7360cae722e854aa1d978f85e05c9eef": {
+    "nombre": "cartola-161.pdf",
+    "fecha_carga": "2026-02-26T16:42:40.250508",
+    "movimientos": 1,
+    "hash": "f8dd6efaa92028503a90472c2f163a3f7360cae722e854aa1d978f85e05c9eef",
+    "institucion": "unknown",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 0.6
+  },
+  "ab89777e942b0ded9d69ffde3dab9eee805f0c0c1a5f5906de15231d6bd504c1": {
+    "nombre": "cartola-162.pdf",
+    "fecha_carga": "2026-02-26T16:42:40.724573",
+    "movimientos": 1,
+    "hash": "ab89777e942b0ded9d69ffde3dab9eee805f0c0c1a5f5906de15231d6bd504c1",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 0.9
+  },
+  "60aa619f80b1e2c953f0ca6cc2f271e1f287542caeadbace8cc66d12e157df1b": {
+    "nombre": "cartola-163.pdf",
+    "fecha_carga": "2026-02-26T16:42:41.045376",
+    "movimientos": 1,
+    "hash": "60aa619f80b1e2c953f0ca6cc2f271e1f287542caeadbace8cc66d12e157df1b",
+    "institucion": "unknown",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 0.6
+  },
+  "900de1c9c3a5fcb0e1dc30a76cf8f3f28364c0c8afaec0065fbe24e9cf3d8137": {
+    "nombre": "cartola-164 (1).pdf",
+    "fecha_carga": "2026-02-26T16:42:41.573267",
+    "movimientos": 1,
+    "hash": "900de1c9c3a5fcb0e1dc30a76cf8f3f28364c0c8afaec0065fbe24e9cf3d8137",
+    "institucion": "cmr",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 0.75
+  },
+  "490fff3fe750d0388340c4c79107811618e9dd8edc1dc8c3f70436111bb9d0c5": {
+    "nombre": "cartola-165.pdf",
+    "fecha_carga": "2026-02-26T16:42:42.023576",
+    "movimientos": 1,
+    "hash": "490fff3fe750d0388340c4c79107811618e9dd8edc1dc8c3f70436111bb9d0c5",
+    "institucion": "unknown",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 0.75
+  },
+  "59c6487f7043a3de1cc5287ec3f177268ba66390560fb03e6a0b9b2e42c22cc2": {
+    "nombre": "cartola-166.pdf",
+    "fecha_carga": "2026-02-26T16:42:42.434512",
+    "movimientos": 1,
+    "hash": "59c6487f7043a3de1cc5287ec3f177268ba66390560fb03e6a0b9b2e42c22cc2",
+    "institucion": "unknown",
+    "tipo_producto": "cuenta_corriente",
+    "deteccion_confianza": 0.6
+  },
+  "65d1ba297ffad92bb7f6a5059acbc42e38fbf925e90d7243dc8a5a6bd40d8870": {
+    "nombre": "estado-de-cuenta (2).pdf",
+    "fecha_carga": "2026-02-26T16:42:52.068545",
+    "movimientos": 1,
+    "hash": "65d1ba297ffad92bb7f6a5059acbc42e38fbf925e90d7243dc8a5a6bd40d8870",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "7208f2e7337a904c3367b8fa48b3216aeb37856c70de554ed92703cedd43c6f4": {
+    "nombre": "estado-de-cuenta (3).pdf",
+    "fecha_carga": "2026-02-26T16:42:52.867036",
+    "movimientos": 1,
+    "hash": "7208f2e7337a904c3367b8fa48b3216aeb37856c70de554ed92703cedd43c6f4",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "5e66bb3e453af8ebf9c0b09f6bba827e6201c18dc776095fde593b879d26e8fe": {
+    "nombre": "estado-de-cuenta (4).pdf",
+    "fecha_carga": "2026-02-26T16:42:53.647510",
+    "movimientos": 1,
+    "hash": "5e66bb3e453af8ebf9c0b09f6bba827e6201c18dc776095fde593b879d26e8fe",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "7ad08072a08927e774f01b88b096d1e1c556c78b18fdd9f9835d50ff4cdec2ce": {
+    "nombre": "estado-de-cuenta (5).pdf",
+    "fecha_carga": "2026-02-26T16:42:54.543670",
+    "movimientos": 1,
+    "hash": "7ad08072a08927e774f01b88b096d1e1c556c78b18fdd9f9835d50ff4cdec2ce",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "d41ed56fce219cea5eab26d18e8c5b8c4ad2511fc92ee26b599b17110cd41e2b": {
+    "nombre": "estado-de-cuenta (6).pdf",
+    "fecha_carga": "2026-02-26T16:42:55.444974",
+    "movimientos": 1,
+    "hash": "d41ed56fce219cea5eab26d18e8c5b8c4ad2511fc92ee26b599b17110cd41e2b",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "191b7cc14c36cd3264495e39b7c443de4208daeba8a004bc6f26f11601b2f461": {
+    "nombre": "estado-de-cuenta (7).pdf",
+    "fecha_carga": "2026-02-26T16:42:56.177680",
+    "movimientos": 1,
+    "hash": "191b7cc14c36cd3264495e39b7c443de4208daeba8a004bc6f26f11601b2f461",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "e95e5af922aed5b8edf0318d1c859b91fa500285b4cad156b6438357ba116626": {
+    "nombre": "estado-de-cuenta (8).pdf",
+    "fecha_carga": "2026-02-26T16:42:56.932469",
+    "movimientos": 1,
+    "hash": "e95e5af922aed5b8edf0318d1c859b91fa500285b4cad156b6438357ba116626",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
+  },
+  "8e7b58e557ca01867dd0dc02d3230804cff4d1ce97ff4cbc73daed23b0c2692f": {
+    "nombre": "estado-de-cuenta (9).pdf",
+    "fecha_carga": "2026-02-26T16:42:57.811173",
+    "movimientos": 1,
+    "hash": "8e7b58e557ca01867dd0dc02d3230804cff4d1ce97ff4cbc73daed23b0c2692f",
+    "institucion": "santander",
+    "tipo_producto": "tarjeta_credito",
+    "deteccion_confianza": 1.0
   }
 }
