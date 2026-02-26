@@ -103,57 +103,263 @@ def load_registry():
             uploaded_files_registry = json.load(f)
 
 def save_active_files():
-    """Guarda el registro de archivos activos"""
+    """Guarda la lista de archivos activos"""
     active_file = PROCESSED_DIR / "active_files.json"
     with open(active_file, "w", encoding="utf-8") as f:
-        json.dump(list(active_files), f, ensure_ascii=False, indent=2)
+        json.dump({"active": list(active_files)}, f, ensure_ascii=False, indent=2)
 
 def load_active_files():
-    """Carga el registro de archivos activos"""
+    """Carga la lista de archivos activos"""
     global active_files
     active_file = PROCESSED_DIR / "active_files.json"
     if active_file.exists():
         with open(active_file, "r", encoding="utf-8") as f:
-            active_files = set(json.load(f))
+            data = json.load(f)
+            active_files = set(data.get("active", []))
+
+# Cargar registros al iniciar
+load_registry()
+load_active_files()
 
 # =====================================================================
-# ENDPOINTS - CARGA DE ARCHIVOS
+# RUTAS API
 # =====================================================================
+
+@app.get("/")
+async def root():
+    """Endpoint raíz"""
+    return {
+        "status": "API conectada",
+        "servicio": "Financial Statement Bot",
+        "version": "1.0.0",
+        "archivos_cargados": len(uploaded_files_registry),
+        "archivos_activos": len(active_files),
+        "limites": {
+            "max_archivos_por_carga": MAX_FILES_PER_BATCH,
+            "max_tamaño_archivo_mb": MAX_FILE_SIZE_MB
+        }
+    }
 
 @app.post("/upload")
-async def upload_files(files: list[UploadFile] = File(...)):
-    """Carga múltiples archivos"""
+async def upload_file(file: UploadFile = File(...)):
+    """Carga un archivo individual"""
+    temp_path = None
+    try:
+        print(f"\n{'='*70}")
+        print(f"📁 SOLICITUD DE CARGA INDIVIDUAL")
+        print(f"{'='*70}")
+        print(f"📄 Archivo: {file.filename}")
+        
+        # Validar extensión
+        allowed_extensions = ['.xlsx', '.xls', '.pdf']
+        file_ext = Path(file.filename).suffix.lower()
+        
+        if file_ext not in allowed_extensions:
+            print(f"❌ RECHAZO: Extensión no permitida ({file_ext})")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": f"Formato no permitido. Use: {', '.join(allowed_extensions)}",
+                    "file": file.filename
+                }
+            )
+        
+        # Guardar temporalmente
+        temp_path = UPLOAD_DIR / file.filename
+        with open(temp_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        # Validar tamaño
+        file_size_mb = temp_path.stat().st_size / (1024 * 1024)
+        if file_size_mb > MAX_FILE_SIZE_MB:
+            temp_path.unlink()
+            print(f"❌ Archivo muy grande: {file_size_mb:.2f}MB (máx: {MAX_FILE_SIZE_MB}MB)")
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "status": "error",
+                    "message": f"Archivo muy grande: {file_size_mb:.2f}MB (máximo: {MAX_FILE_SIZE_MB}MB)",
+                    "file": file.filename
+                }
+            )
+        
+        print(f"✅ Archivo guardado: {file_size_mb:.2f}MB")
+        
+        # Calcular hash
+        file_hash = calculate_file_hash(temp_path)
+        print(f"🔐 Hash: {file_hash[:16]}...")
+        
+        # Verificar duplicado
+        duplicate_check = is_file_already_uploaded(file_hash)
+        
+        if duplicate_check["is_duplicate"]:
+            print(f"⚠️  ARCHIVO DUPLICADO")
+            temp_path.unlink()
+            
+            file_info = duplicate_check["file_info"]
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "status": "warning",
+                    "message": "Este archivo ya fue cargado anteriormente",
+                    "is_duplicate": True,
+                    "original_file": {
+                        "nombre": file_info['nombre'],
+                        "fecha_carga": file_info['fecha_carga'],
+                        "movimientos": file_info['movimientos'],
+                        "institucion": file_info.get('institucion', 'unknown'),
+                        "tipo_producto": file_info.get('tipo_producto', 'unknown')
+                    }
+                }
+            )
+        
+        print(f"✅ Archivo NUEVO")
+        
+        # Detectar institución y tipo de producto automáticamente
+        print(f"🔍 Detectando instituci��n y tipo de producto...")
+        detection = file_detector.detect_from_file(str(temp_path))
+        print(f"🏦 Institución detectada: {detection['institution']} (confianza: {detection['confidence']})")
+        print(f"💳 Tipo de producto: {detection['product_type']}")
+        
+        # Procesar
+        print(f"🔄 Extrayendo movimientos...")
+        movements = []
+        
+        if file_ext == '.pdf':
+            movements = file_reader.read_pdf(str(temp_path))
+        else:
+            movements = file_reader.read_xlsx(str(temp_path))
+        
+        if not movements:
+            print(f"❌ Sin movimientos extraídos")
+            temp_path.unlink()
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": "No se pudieron extraer movimientos del archivo",
+                    "file": file.filename
+                }
+            )
+        
+        # Agregar información de detección a cada movimiento
+        for movement in movements:
+            movement['institucion'] = detection['institution']
+            movement['tipo_producto'] = detection['product_type']
+            movement['deteccion_confianza'] = detection['confidence']
+        
+        # Registrar y activar
+        register_uploaded_file(file_hash, file.filename, len(movements), detection)
+        active_files.add(file_hash)
+        save_active_files()
+        
+        processed_path = PROCESSED_DIR / file.filename
+        shutil.move(str(temp_path), str(processed_path))
+        
+        print(f"✅ ÉXITO: {len(movements)} movimientos")
+        print(f"🔌 Estado: ACTIVO")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": f"{len(movements)} movimientos extraídos",
+                "file": file.filename,
+                "movements_count": len(movements),
+                "institucion": detection['institution'],
+                "tipo_producto": detection['product_type'],
+                "deteccion_confianza": detection['confidence'],
+                "movements": movements,
+                "file_info": {
+                    "hash": file_hash,
+                    "activo": True
+                }
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ ERROR: {str(e)}")
+        if temp_path and temp_path.exists():
+            temp_path.unlink()
+        
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Error procesando archivo: {str(e)}",
+                "file": file.filename if 'file' in locals() else "desconocido"
+            }
+        )
+
+@app.post("/upload-batch")
+async def upload_batch(files: list[UploadFile] = File(...)):
+    """Carga múltiples archivos (máximo definido)"""
+    print(f"\n{'='*70}")
+    print(f"📁 SOLICITUD DE CARGA MASIVA")
+    print(f"{'='*70}")
+    print(f"📦 Total archivos: {len(files)}")
     
-    # Validar cantidad de archivos
+    # Validar cantidad
     if len(files) > MAX_FILES_PER_BATCH:
+        print(f"❌ RECHAZO: Demasiados archivos ({len(files)} > {MAX_FILES_PER_BATCH})")
         return JSONResponse(
             status_code=400,
             content={
                 "status": "error",
-                "message": f"Máximo {MAX_FILES_PER_BATCH} archivos por carga"
+                "message": f"Máximo {MAX_FILES_PER_BATCH} archivos por carga (enviaste {len(files)})",
+                "limite": MAX_FILES_PER_BATCH,
+                "enviados": len(files)
             }
         )
     
     results = []
+    total_movements = 0
+    successful = 0
+    duplicates = 0
+    errors = 0
     
-    for file in files:
+    for idx, file in enumerate(files, 1):
+        print(f"\n[{idx}/{len(files)}] Procesando: {file.filename}")
+        
+        temp_path = None
         try:
-            # Validar tamaño
-            content = await file.read()
-            file_size_mb = len(content) / (1024 * 1024)
-            
-            if file_size_mb > MAX_FILE_SIZE_MB:
+            # Validar extensión
+            file_ext = Path(file.filename).suffix.lower()
+            if file_ext not in ['.xlsx', '.xls', '.pdf']:
+                print(f"   ❌ Extensión no permitida")
                 results.append({
-                    "filename": file.filename,
+                    "file": file.filename,
                     "status": "error",
-                    "message": f"Archivo muy grande ({file_size_mb:.2f}MB > {MAX_FILE_SIZE_MB}MB)"
+                    "message": "Extensión no permitida",
+                    "movements": 0
                 })
+                errors += 1
                 continue
             
             # Guardar temporalmente
             temp_path = UPLOAD_DIR / file.filename
+            content = await file.read()
+            
             with open(temp_path, "wb") as f:
                 f.write(content)
+            
+            # Validar tamaño
+            file_size_mb = temp_path.stat().st_size / (1024 * 1024)
+            if file_size_mb > MAX_FILE_SIZE_MB:
+                temp_path.unlink()
+                print(f"   ❌ Archivo muy grande ({file_size_mb:.2f}MB)")
+                results.append({
+                    "file": file.filename,
+                    "status": "error",
+                    "message": f"Archivo muy grande ({file_size_mb:.2f}MB > {MAX_FILE_SIZE_MB}MB)",
+                    "movements": 0
+                })
+                errors += 1
+                continue
+            
+            print(f"   ✅ Guardado ({file_size_mb:.2f}MB)")
             
             # Calcular hash
             file_hash = calculate_file_hash(temp_path)
@@ -162,126 +368,187 @@ async def upload_files(files: list[UploadFile] = File(...)):
             duplicate_check = is_file_already_uploaded(file_hash)
             if duplicate_check["is_duplicate"]:
                 temp_path.unlink()
+                print(f"   ⚠️  DUPLICADO")
                 results.append({
-                    "filename": file.filename,
-                    "status": "error",
-                    "message": "Archivo duplicado",
-                    "previous_upload": duplicate_check["file_info"]["fecha_carga"]
+                    "file": file.filename,
+                    "status": "duplicate",
+                    "message": "Archivo ya fue cargado",
+                    "movements": duplicate_check["file_info"]["movimientos"]
                 })
+                duplicates += 1
                 continue
             
-            # Detectar tipo de documento
-            detection = file_detector.detect(str(temp_path))
+            # Detectar institución y tipo de producto
+            print(f"   🔍 Detectando institución y tipo...")
+            detection = file_detector.detect_from_file(str(temp_path))
+            print(f"   🏦 {detection['institution']} - {detection['product_type']} (confianza: {detection['confidence']})")
             
-            # Procesar archivo
-            if file.filename.lower().endswith('.pdf'):
+            # Procesar
+            movements = []
+            if file_ext == '.pdf':
                 movements = file_reader.read_pdf(str(temp_path))
-            elif file.filename.lower().endswith('.xlsx'):
-                movements = file_reader.read_xlsx(str(temp_path))
             else:
+                movements = file_reader.read_xlsx(str(temp_path))
+            
+            if not movements:
                 temp_path.unlink()
+                print(f"   ❌ Sin movimientos")
                 results.append({
-                    "filename": file.filename,
+                    "file": file.filename,
                     "status": "error",
-                    "message": "Tipo de archivo no soportado"
+                    "message": "No se extrajeron movimientos",
+                    "movements": 0
                 })
+                errors += 1
                 continue
             
-            # Mover a carpeta procesada
-            processed_path = PROCESSED_DIR / file.filename
-            shutil.move(str(temp_path), str(processed_path))
+            # Agregar información de detección a cada movimiento
+            for movement in movements:
+                movement['institucion'] = detection['institution']
+                movement['tipo_producto'] = detection['product_type']
+                movement['deteccion_confianza'] = detection['confidence']
             
-            # Registrar archivo
+            # Registrar y activar
             register_uploaded_file(file_hash, file.filename, len(movements), detection)
             active_files.add(file_hash)
             save_active_files()
             
-            print(f"✅ Cargado: {file.filename} ({len(movements)} movimientos)")
+            processed_path = PROCESSED_DIR / file.filename
+            shutil.move(str(temp_path), str(processed_path))
             
+            print(f"   ✅ ÉXITO: {len(movements)} movimientos")
             results.append({
-                "filename": file.filename,
+                "file": file.filename,
                 "status": "success",
-                "file_hash": file_hash,
-                "movements_count": len(movements),
-                "detection": detection
+                "message": f"{len(movements)} movimientos extraídos",
+                "movements": len(movements),
+                "institucion": detection['institution'],
+                "tipo_producto": detection['product_type'],
+                "deteccion_confianza": detection['confidence'],
+                "activo": True
             })
+            
+            successful += 1
+            total_movements += len(movements)
             
         except Exception as e:
+            print(f"   ❌ ERROR: {str(e)}")
+            if temp_path and temp_path.exists():
+                temp_path.unlink()
+            
             results.append({
-                "filename": file.filename,
+                "file": file.filename,
                 "status": "error",
-                "message": str(e)
+                "message": str(e),
+                "movements": 0
             })
+            errors += 1
     
-    return {
-        "status": "success",
-        "files_processed": len(results),
-        "results": results
-    }
-
-# =====================================================================
-# ENDPOINTS - GESTIÓN DE ARCHIVOS
-# =====================================================================
+    print(f"\n{'='*70}")
+    print(f"📊 RESUMEN DE CARGA MASIVA")
+    print(f"{'='*70}")
+    print(f"✅ Exitosos: {successful}")
+    print(f"⚠️  Duplicados: {duplicates}")
+    print(f"❌ Errores: {errors}")
+    print(f"📈 Total movimientos: {total_movements}")
+    print(f"{'='*70}\n")
+    
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "completed",
+            "message": f"Carga masiva completada: {successful} exitosos, {duplicates} duplicados, {errors} errores",
+            "resumen": {
+                "total_archivos": len(files),
+                "exitosos": successful,
+                "duplicados": duplicates,
+                "errores": errors,
+                "total_movimientos": total_movements
+            },
+            "resultados": results,
+            "limites": {
+                "max_archivos_por_carga": MAX_FILES_PER_BATCH,
+                "max_tamaño_archivo_mb": MAX_FILE_SIZE_MB
+            }
+        }
+    )
 
 @app.get("/uploaded-files")
 async def get_uploaded_files():
-    """Obtiene lista de archivos cargados"""
-    load_registry()
-    load_active_files()
-    
+    """Lista archivos cargados"""
     files_list = []
     for file_hash, file_info in uploaded_files_registry.items():
-        file_info["is_active"] = file_hash in active_files
-        files_list.append(file_info)
+        files_list.append({
+            "hash": file_hash,
+            "nombre": file_info['nombre'],
+            "fecha_carga": file_info['fecha_carga'],
+            "movimientos": file_info['movimientos'],
+            "institucion": file_info.get('institucion', 'unknown'),
+            "tipo_producto": file_info.get('tipo_producto', 'unknown'),
+            "deteccion_confianza": file_info.get('deteccion_confianza', 0.0),
+            "activo": file_hash in active_files
+        })
     
     return {
         "status": "success",
-        "total_files": len(files_list),
-        "active_files": len(active_files),
-        "files": files_list
+        "total_archivos": len(files_list),
+        "archivos_activos": len(active_files),
+        "archivos": files_list
     }
 
-@app.post("/activate-file/{file_hash}")
+@app.post("/uploaded-files/{file_hash}/activate")
 async def activate_file(file_hash: str):
-    """Activa un archivo para análisis"""
+    """Activa un archivo"""
     if file_hash not in uploaded_files_registry:
         return JSONResponse(
             status_code=404,
             content={"status": "error", "message": f"Archivo no encontrado: {file_hash}"}
         )
     
-    active_files.add(file_hash)
-    save_active_files()
-    
-    file_info = uploaded_files_registry[file_hash]
-    print(f"✅ Activado: {file_info['nombre']}")
-    
-    return {
-        "status": "success",
-        "message": f"Archivo activado: {file_info['nombre']}",
-        "file_info": file_info
-    }
+    try:
+        file_info = uploaded_files_registry[file_hash]
+        active_files.add(file_hash)
+        save_active_files()
+        
+        print(f"✅ Activado: {file_info['nombre']}")
+        
+        return {
+            "status": "success",
+            "message": f"Archivo activado: {file_info['nombre']}",
+            "file_info": file_info
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
-@app.post("/deactivate-file/{file_hash}")
+@app.post("/uploaded-files/{file_hash}/deactivate")
 async def deactivate_file(file_hash: str):
-    """Desactiva un archivo para análisis"""
+    """Desactiva un archivo"""
     if file_hash not in uploaded_files_registry:
         return JSONResponse(
             status_code=404,
             content={"status": "error", "message": f"Archivo no encontrado: {file_hash}"}
         )
     
-    active_files.discard(file_hash)
-    save_active_files()
-    
-    file_info = uploaded_files_registry[file_hash]
-    print(f"❌ Desactivado: {file_info['nombre']}")
-    
-    return {
-        "status": "success",
-        "message": f"Archivo desactivado: {file_info['nombre']}",
-        "file_info": file_info
-    }
+    try:
+        file_info = uploaded_files_registry[file_hash]
+        active_files.discard(file_hash)
+        save_active_files()
+        
+        print(f"⏸️  Desactivado: {file_info['nombre']}")
+        
+        return {
+            "status": "success",
+            "message": f"Archivo desactivado: {file_info['nombre']}",
+            "file_info": file_info
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
 @app.delete("/uploaded-files/{file_hash}")
 async def delete_uploaded_file(file_hash: str):
@@ -362,7 +629,7 @@ async def get_movements():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Health check"""
     return {
         "status": "Healthy",
         "timestamp": datetime.now().isoformat(),
@@ -373,42 +640,6 @@ async def health_check():
             "max_tamaño_archivo_mb": MAX_FILE_SIZE_MB
         }
     }
-
-@app.delete("/uploaded-files")
-def delete_all_files():
-    """Elimina TODOS los archivos cargados"""
-    try:
-        global uploaded_files_registry, active_files
-
-        # Eliminar archivos físicos
-        if PROCESSED_DIR.exists():
-            for file_path in PROCESSED_DIR.glob("*.pdf"):
-                file_path.unlink()
-            for file_path in PROCESSED_DIR.glob("*.xlsx"):
-                file_path.unlink()
-
-        # Limpiar registros
-        uploaded_files_registry = {}
-        active_files = set()
-
-        # Guardar cambios
-        save_registry()
-        save_active_files()
-
-        print("\n" + "="*70)
-        print("🗑️  TODOS LOS ARCHIVOS HAN SIDO ELIMINADOS")
-        print("="*70 + "\n")
-
-        return {
-            "status": "success",
-            "message": "Todos los archivos han sido eliminados"
-        }
-
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"status": "error", "message": str(e)}
-        )
 
 if __name__ == "__main__":
     import uvicorn
