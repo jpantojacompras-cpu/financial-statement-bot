@@ -629,6 +629,17 @@ async def get_movements():
 
 @app.get("/health")
 async def health_check():
+    """Health check"""
+    return {
+        "status": "Healthy",
+        "timestamp": datetime.now().isoformat(),
+        "archivos_cargados": len(uploaded_files_registry),
+        "archivos_activos": len(active_files),
+        "limites": {
+            "max_archivos_por_carga": MAX_FILES_PER_BATCH,
+            "max_tamaño_archivo_mb": MAX_FILE_SIZE_MB
+        }
+    }
 
 @app.delete("/uploaded-files")
 def delete_all_files():
