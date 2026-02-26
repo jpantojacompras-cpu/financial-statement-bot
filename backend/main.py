@@ -629,17 +629,42 @@ async def get_movements():
 
 @app.get("/health")
 async def health_check():
-    """Health check"""
-    return {
-        "status": "Healthy",
-        "timestamp": datetime.now().isoformat(),
-        "archivos_cargados": len(uploaded_files_registry),
-        "archivos_activos": len(active_files),
-        "limites": {
-            "max_archivos_por_carga": MAX_FILES_PER_BATCH,
-            "max_tamaño_archivo_mb": MAX_FILE_SIZE_MB
+
+@app.delete("/uploaded-files")
+def delete_all_files():
+    """Elimina TODOS los archivos cargados"""
+    try:
+        global uploaded_files_registry, active_files
+        
+        # Eliminar archivos físicos
+        if PROCESSED_DIR.exists():
+            for file_path in PROCESSED_DIR.glob("*.pdf"):
+                file_path.unlink()
+            for file_path in PROCESSED_DIR.glob("*.xlsx"):
+                file_path.unlink()
+        
+        # Limpiar registros
+        uploaded_files_registry = {}
+        active_files = set()
+        
+        # Guardar cambios
+        save_registry()
+        save_active_files()
+        
+        print("\n" + "="*70)
+        print("🗑��  TODOS LOS ARCHIVOS HAN SIDO ELIMINADOS")
+        print("="*70 + "\n")
+        
+        return {
+            "status": "success",
+            "message": "Todos los archivos han sido eliminados"
         }
-    }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
 if __name__ == "__main__":
     import uvicorn

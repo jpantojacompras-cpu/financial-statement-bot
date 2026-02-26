@@ -140,15 +140,6 @@ export default function FileManager() {
                 Movimientos
               </th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Institución
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Tipo de Producto
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                Confianza
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                 Fecha de Carga
               </th>
               <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900">
@@ -162,7 +153,7 @@ export default function FileManager() {
           <tbody className="divide-y divide-gray-200">
             {files.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                   No hay archivos cargados
                 </td>
               </tr>
@@ -179,15 +170,6 @@ export default function FileManager() {
                     <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
                       {file.movimientos}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {file.institucion || '—'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {file.tipo_producto || '—'}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-sm font-semibold text-green-600">100%</span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(file.fecha_carga).toLocaleDateString('es-CL', {
