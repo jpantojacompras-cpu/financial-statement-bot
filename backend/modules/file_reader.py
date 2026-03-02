@@ -77,7 +77,8 @@ class FileReader:
                         text, 
                         file_path, 
                         detection['bank'],
-                        detection['product_type']
+                        detection['product_type'],
+                        page=page
                     )
                     
                     if page_movements:
@@ -130,11 +131,12 @@ class FileReader:
     def _detect_bank(self, text: str) -> str:
         """Detecta el banco desde el texto"""
         
-        # Palabras clave por banco
+        # Palabras clave por banco (bice antes de santander y cmr para evitar
+        # falsos positivos cuando transacciones mencionan otros bancos)
         patterns = {
+            'bice': ['banco bice', 'bice'],
+            'santander': ['santander', 'banco santander', 's a n t a n d e r'],
             'cmr': ['cmr', 'falabella', 'tarjeta cmr'],
-            'santander': ['santander', 'banco santander', 'estado de cuenta santander'],
-            'bice': ['bice', 'banco bice'],
             'itau': ['itau', 'itaú', 'banco itau'],
             'bbva': ['bbva', 'banco bbva'],
             'scotiabank': ['scotia', 'scotiabank'],
@@ -177,7 +179,7 @@ class FileReader:
         else:
             return 'CUENTA_CORRIENTE'
 
-    def _extract_movements_from_text(self, text: str, file_path: str, bank: str, product_type: str) -> List[Dict]:
+    def _extract_movements_from_text(self, text: str, file_path: str, bank: str, product_type: str, page=None) -> List[Dict]:
         """Extrae movimientos según banco y tipo de producto"""
         
         if bank == 'CMR':
@@ -185,7 +187,7 @@ class FileReader:
         elif bank == 'SANTANDER' and product_type == 'TARJETA_CREDITO':
             return self._parse_santander_cc(text, file_path)
         elif bank == 'SANTANDER' and product_type == 'CUENTA_CORRIENTE':
-            return self._parse_santander_checking(text, file_path)
+            return self._parse_santander_checking(text, file_path, page=page)
         elif bank == 'BICE' and product_type == 'CUENTA_CORRIENTE':
             return self._parse_bice_checking(text, file_path)
         else:
@@ -329,59 +331,115 @@ class FileReader:
 
         return movements
 
-    def _parse_santander_checking(self, text: str, file_path: str) -> List[Dict]:
+    def _parse_santander_checking(self, text: str, file_path: str, page=None) -> List[Dict]:
         """Parser Santander Cuenta Corriente"""
+        from collections import deque
         movements = []
         lines = text.split('\n')
 
-        fecha_pattern = r'(\d{1,2}/\d{1,2}/\d{4})'
+        # Get column x-positions and amount word positions from page if available
+        cargo_x = None
+        abono_x = None
+        amount_x_queues = {}  # amount_str -> deque of x-center positions (page order)
+
+        if page is not None:
+            words = page.extract_words()
+            # Find first CARGOS and ABONOS header x-centers from the main table
+            for w in words:
+                if w['text'].upper() == 'CARGOS' and cargo_x is None:
+                    cargo_x = (w['x0'] + w['x1']) / 2
+                elif w['text'].upper() == 'ABONOS' and abono_x is None:
+                    abono_x = (w['x0'] + w['x1']) / 2
+
+            # Build lookup: amount_str -> deque of x-center positions (in page order)
+            # Require at least one .DDD group to match Chilean thousand-separator format
+            # and to avoid matching reference/document numbers (e.g. "800020", "0159524825")
+            amount_word_re = re.compile(r'^\d+(?:\.\d{3})+$')
+            for w in words:
+                if amount_word_re.match(w['text']):
+                    key = w['text']
+                    if key not in amount_x_queues:
+                        amount_x_queues[key] = deque()
+                    amount_x_queues[key].append((w['x0'] + w['x1']) / 2)
+
+        # Extract year from text (from CARTOLA DESDE/HASTA full dates like "30/10/2025")
+        year_match = re.search(r'\d{1,2}/\d{1,2}/(\d{4})', text)
+        year = year_match.group(1) if year_match else str(datetime.now().year)
+
+        # Amount pattern: Chilean thousand-separator format (dot-grouped, no $ required)
+        # Requiring at least one .DDD group avoids matching bare document/reference numbers
+        amount_re = re.compile(r'\b(\d+(?:\.\d{3})+)\b')
 
         for line in lines:
             line = line.strip()
-            
-            if not line or len(line) < 20:
+
+            if not line or len(line) < 10:
                 continue
-            
+
             if any(word in line.lower() for word in ['estado de cuenta', 'saldo', 'periodo', 'total', 'resumen', 'página']):
                 continue
 
-            fecha_match = re.search(fecha_pattern, line)
+            # Lines must start with DD/MM date (e.g. "05/11Agustinas ...")
+            fecha_match = re.match(r'^(\d{1,2}/\d{1,2})', line)
             if not fecha_match:
                 continue
 
             try:
-                fecha_str = fecha_match.group(1)
-                fecha = self._parse_date(fecha_str, '%d/%m/%Y')
-                if not fecha:
+                fecha_dm = fecha_match.group(1)
+                parts = fecha_dm.split('/')
+                dia = int(parts[0])
+                mes = int(parts[1])
+                if dia < 1 or dia > 31 or mes < 1 or mes > 12:
                     continue
+                fecha = f"{year}-{mes:02d}-{dia:02d}"
 
                 fecha_end = fecha_match.end()
                 resto = line[fecha_end:].strip()
 
-                # Buscar montos
-                montos = re.findall(r'\$\s*(\d+(?:\.\d{3})*(?:,\d{2})?)', resto)
+                if not resto or len(resto) < 5:
+                    continue
+
+                # Find all amounts (numbers with thousand-separator dots)
+                montos = amount_re.findall(resto)
                 if not montos:
                     continue
 
-                monto_str = montos[-1]
+                # Determine monto and tipo using column x-positions if available
+                monto_str = None
+                tipo = "gasto"  # default
+
+                if cargo_x is not None and abono_x is not None:
+                    # SALDO column sits further right than ABONOS; use one column-width
+                    # beyond ABONOS as the cutoff to exclude running-balance amounts
+                    saldo_threshold = abono_x + (abono_x - cargo_x)
+                    for m in montos:
+                        if m in amount_x_queues and amount_x_queues[m]:
+                            x = amount_x_queues[m].popleft()
+                            if x <= saldo_threshold:
+                                # Amount is in CARGOS or ABONOS column
+                                monto_str = m
+                                if abs(x - abono_x) < abs(x - cargo_x):
+                                    tipo = "ingreso"
+                                break
+                            # else: x is in SALDO column, consume and continue
+
+                if monto_str is None:
+                    monto_str = montos[0]  # fallback: use first amount found
+
                 monto = self._parse_amount(monto_str)
 
                 if not monto or monto <= 0 or monto > 100000000:
                     continue
 
-                # Descripción
-                monto_idx = resto.rfind(f"${monto_str}")
-                if monto_idx < 0:
-                    monto_idx = resto.rfind(monto_str)
-                
+                # Description: text before the transaction amount
+                # Use rfind to handle edge cases where the amount string appears
+                # elsewhere in the description text
+                monto_idx = resto.rfind(monto_str)
                 descripcion_raw = resto[:monto_idx].strip() if monto_idx > 0 else resto
                 descripcion = self._clean_description(descripcion_raw)
 
                 if not descripcion or len(descripcion) < 3:
                     continue
-
-                # Detectar tipo (gasto o ingreso)
-                tipo = "ingreso" if any(word in descripcion.lower() for word in ['abono', 'deposito', 'ingreso', 'liquidacion']) else "gasto"
 
                 movement = {
                     "id": len(movements),
