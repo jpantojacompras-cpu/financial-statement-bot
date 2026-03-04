@@ -11,7 +11,11 @@ class IntelligentCategorizer:
     confianza 0-100.
     """
 
-    # Rangos de montos típicos (CLP) por categoría
+    # Confidence adjustment constants
+    _AMOUNT_MATCH_BONUS = 5     # Bonus when monto is within typical range
+    _AMOUNT_MISMATCH_PENALTY = 10  # Penalty when monto is outside typical range
+    _SEASONAL_BONUS = 3          # Bonus for seasonal category match
+    _CONF_CEILING = 99           # Max confidence value (0-100 scale)
     AMOUNT_RANGES: dict = {
         "Inversiones": (1_000, 10_000_000),
         "Deudas": (10_000, 5_000_000),
@@ -103,14 +107,14 @@ class IntelligentCategorizer:
         if monto is not None and categoria in self.AMOUNT_RANGES:
             lo, hi = self.AMOUNT_RANGES[categoria]
             if lo <= abs(monto) <= hi:
-                conf = min(conf + 5, 99)
+                conf = min(conf + self._AMOUNT_MATCH_BONUS, self._CONF_CEILING)
             else:
-                conf = max(conf - 10, 10)
+                conf = max(conf - self._AMOUNT_MISMATCH_PENALTY, 10)
 
         # Bonus estacional
         if mes is not None and mes in self.SEASONAL_HINTS:
             if categoria in self.SEASONAL_HINTS[mes]:
-                conf = min(conf + 3, 99)
+                conf = min(conf + self._SEASONAL_BONUS, self._CONF_CEILING)
 
         return conf
 

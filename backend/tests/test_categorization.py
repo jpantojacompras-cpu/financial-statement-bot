@@ -15,13 +15,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 # Fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_pattern_db(tmp_path):
     from modules.pattern_db import PatternDB
     return PatternDB(patterns_path=str(tmp_path / "patterns.json"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_learning_engine(tmp_path):
     from modules.pattern_db import PatternDB
     from modules.intelligent_categorizer import IntelligentCategorizer
@@ -36,7 +36,7 @@ def tmp_learning_engine(tmp_path):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_cache_manager(tmp_path):
     from modules.cache_manager import CacheManager
     return CacheManager(

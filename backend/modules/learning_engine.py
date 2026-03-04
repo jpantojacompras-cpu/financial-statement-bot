@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 
 from .pattern_db import PatternDB
 from .intelligent_categorizer import IntelligentCategorizer
+from .constants import MONTH_NAMES
 
 
 LEARNING_LOG_PATH = Path("backend/data/learning_log.json")
@@ -57,12 +58,7 @@ class LearningEngine:
                 parts = fecha.replace("/", "-").split("-")
                 if len(parts) >= 2:
                     mes_num = int(parts[1])
-                    month_names = [
-                        "enero", "febrero", "marzo", "abril", "mayo", "junio",
-                        "julio", "agosto", "septiembre", "octubre", "noviembre",
-                        "diciembre",
-                    ]
-                    mes = month_names[mes_num - 1]
+                    mes = MONTH_NAMES[mes_num - 1]
             except (ValueError, IndexError):
                 pass
 

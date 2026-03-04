@@ -8,8 +8,11 @@ CACHE_DIR = Path("backend/cache")
 CACHE_FILE = CACHE_DIR / "movements_cache.json"
 META_FILE = CACHE_DIR / "last_update.json"
 
-# Default TTL: 1 hour
-DEFAULT_TTL_SECONDS = 3600
+# TTL constants
+# When files change frequently, use a shorter TTL (1 hour).
+# When the caller knows data is stable, a longer TTL (24 hours) can be passed.
+DEFAULT_TTL_SECONDS = 3600      # 1 hour – default when files were recently modified
+LONG_TTL_SECONDS = 86400        # 24 hours – suitable when no uploads are expected
 
 
 class CacheManager:

@@ -6,6 +6,11 @@ from typing import Dict, List, Optional
 
 PATTERNS_PATH = Path("backend/data/patterns.json")
 
+# Confidence scoring constants
+_BASE_CONFIDENCE = 0.5        # Minimum confidence for a new pattern
+_CONFIDENCE_INCREMENT = 0.05  # Per-observation confidence increase
+_MAX_CONFIDENCE = 0.99        # Ceiling for learned confidence
+
 
 class PatternDB:
     """
@@ -49,7 +54,7 @@ class PatternDB:
         existing = self.patterns.get(key, {})
 
         veces = existing.get("veces_visto", 0) + 1
-        confianza = min(0.99, 0.5 + veces * 0.05)
+        confianza = min(_MAX_CONFIDENCE, _BASE_CONFIDENCE + veces * _CONFIDENCE_INCREMENT)
 
         montos_tipicos: List[float] = existing.get("montos_tipicos", [])
         if monto is not None:
