@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertCircle, Edit2 } from 'lucide-react';
 import { Movement } from '../../types/Movement';
 import CategoryEditor from '../CategoryEditor';
+import { api } from '../../services/api';
 
 interface UncategorizedMovementsProps {
   movements: Movement[];
@@ -24,8 +25,7 @@ export default function UncategorizedMovements({ movements }: UncategorizedMovem
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:8000/categories');
-        const data = await response.json();
+        const data = await api.get<{ status: string; categories: { [key: string]: string[] } }>('/categories');
         if (data.status === 'success') {
           setAllCategories(data.categories);
         }
@@ -62,24 +62,15 @@ export default function UncategorizedMovements({ movements }: UncategorizedMovem
 
   const handleSaveCategory = async (id: string | number, categoria: string, subcategoria: string) => {
     try {
-      const response = await fetch('http://localhost:8000/movements/categorize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          movement_id: id,
-          categoria,
-          subcategoria,
-          learn: true,
-        }),
+      await api.post('/movements/categorize', {
+        movement_id: id,
+        categoria,
+        subcategoria,
+        learn: true,
       });
-
-      if (response.ok) {
-        alert('✅ Movimiento categorizado y sistema aprendió el patrón');
-        setShowEditor(false);
-        setSelectedMovement(null);
-      } else {
-        alert('❌ Error al categorizar');
-      }
+      alert('✅ Movimiento categorizado y sistema aprendió el patrón');
+      setShowEditor(false);
+      setSelectedMovement(null);
     } catch (error) {
       console.error('Error saving category:', error);
       alert('❌ Error al categorizar');

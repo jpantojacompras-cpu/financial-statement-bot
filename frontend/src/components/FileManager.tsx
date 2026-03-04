@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Eye, EyeOff, RefreshCw, Trash } from 'lucide-react';
+import { api } from '../services/api';
 
 interface UploadedFile {
   hash: string;
@@ -29,8 +30,7 @@ export default function FileManager({ onFilesChanged }: FileManagerProps) {
   const fetchFiles = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/uploaded-files');
-      const data = await response.json();
+      const data = await api.get<{ status: string; archivos?: UploadedFile[] }>('/uploaded-files');
       if (data.status === 'success') {
         setFiles(data.archivos || []);
       }
@@ -43,16 +43,14 @@ export default function FileManager({ onFilesChanged }: FileManagerProps) {
 
   const toggleFileActive = async (hash: string, currentActive: boolean) => {
     try {
-      const endpoint = currentActive
-        ? `http://localhost:8000/uploaded-files/${hash}/deactivate`
-        : `http://localhost:8000/uploaded-files/${hash}/activate`;
+      const path = currentActive
+        ? `/uploaded-files/${hash}/deactivate`
+        : `/uploaded-files/${hash}/activate`;
 
-      const response = await fetch(endpoint, { method: 'POST' });
-      if (response.ok) {
-        fetchFiles();
-        if (onFilesChanged) {
-          onFilesChanged();
-        }
+      await api.post(path, {});
+      fetchFiles();
+      if (onFilesChanged) {
+        onFilesChanged();
       }
     } catch (error) {
       console.error('Error toggling file:', error);
@@ -63,15 +61,12 @@ export default function FileManager({ onFilesChanged }: FileManagerProps) {
   const showAllFiles = async () => {
     try {
       setLoading(true);
-      // Activar todos los archivos inactivos
       const inactiveFiles = files.filter(f => !f.activo);
-      
+
       for (const file of inactiveFiles) {
-        await fetch(`http://localhost:8000/uploaded-files/${file.hash}/activate`, { 
-          method: 'POST' 
-        });
+        await api.post(`/uploaded-files/${file.hash}/activate`, {});
       }
-      
+
       fetchFiles();
       if (onFilesChanged) {
         onFilesChanged();
@@ -87,15 +82,12 @@ export default function FileManager({ onFilesChanged }: FileManagerProps) {
   const hideAllFiles = async () => {
     try {
       setLoading(true);
-      // Desactivar todos los archivos activos
       const activeFilesArray = files.filter(f => f.activo);
-      
+
       for (const file of activeFilesArray) {
-        await fetch(`http://localhost:8000/uploaded-files/${file.hash}/deactivate`, { 
-          method: 'POST' 
-        });
+        await api.post(`/uploaded-files/${file.hash}/deactivate`, {});
       }
-      
+
       fetchFiles();
       if (onFilesChanged) {
         onFilesChanged();
@@ -110,15 +102,10 @@ export default function FileManager({ onFilesChanged }: FileManagerProps) {
   const deleteFile = async (hash: string) => {
     if (confirm('¿Eliminar archivo?')) {
       try {
-        const response = await fetch(
-          `http://localhost:8000/uploaded-files/${hash}`,
-          { method: 'DELETE' }
-        );
-        if (response.ok) {
-          fetchFiles();
-          if (onFilesChanged) {
-            onFilesChanged();
-          }
+        await api.delete(`/uploaded-files/${hash}`);
+        fetchFiles();
+        if (onFilesChanged) {
+          onFilesChanged();
         }
       } catch (error) {
         console.error('Error deleting file:', error);
@@ -135,19 +122,12 @@ export default function FileManager({ onFilesChanged }: FileManagerProps) {
     if (confirm(`¿Eliminar TODOS los ${files.length} archivos? Esta acción no se puede deshacer.`)) {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:8000/uploaded-files', {
-          method: 'DELETE'
-        });
-        
-        if (response.ok) {
-          setFiles([]);
-          alert('Todos los archivos han sido eliminados');
-          fetchFiles();
-          if (onFilesChanged) {
-            onFilesChanged();
-          }
-        } else {
-          alert('Error al eliminar archivos');
+        await api.delete('/uploaded-files');
+        setFiles([]);
+        alert('Todos los archivos han sido eliminados');
+        fetchFiles();
+        if (onFilesChanged) {
+          onFilesChanged();
         }
       } catch (error) {
         console.error('Error deleting all files:', error);

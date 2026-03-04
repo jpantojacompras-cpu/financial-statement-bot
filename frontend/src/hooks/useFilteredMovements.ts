@@ -13,7 +13,7 @@ interface Movement {
 }
 
 export function useFilteredMovements(movements: Movement[] | undefined) {
-  const { selectedYear, selectedMonth, selectedType } = useDateFilter();
+  const { selectedYear, selectedMonth, activeType: selectedType } = useDateFilter();
 
   return useMemo(() => {
     // ✅ Validar que movements sea un array

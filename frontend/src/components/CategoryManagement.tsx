@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, X } from 'lucide-react';
+import { api } from '../services/api';
 
 interface CategoryManagementProps {
   onClose: () => void;
@@ -20,8 +21,7 @@ export default function CategoryManagement({ onClose }: CategoryManagementProps)
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/categories');
-      const data = await response.json();
+      const data = await api.get<{ status: string; categories: { [key: string]: string[] } }>('/categories');
       if (data.status === 'success') {
         setCategories(data.categories);
       }
@@ -40,13 +40,7 @@ export default function CategoryManagement({ onClose }: CategoryManagementProps)
 
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:8000/categories/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoria: newCategory }),
-      });
-
-      const result = await response.json();
+      const result = await api.post<{ status: string; message?: string }>('/categories/add', { categoria: newCategory });
 
       if (result.status === 'success') {
         alert('✅ Categoría agregada');
@@ -72,16 +66,10 @@ export default function CategoryManagement({ onClose }: CategoryManagementProps)
 
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:8000/categories/add-subcategory', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          categoria: selectedCategory,
-          subcategoria: newSubcategory,
-        }),
+      const result = await api.post<{ status: string; message?: string }>('/categories/add-subcategory', {
+        categoria: selectedCategory,
+        subcategoria: newSubcategory,
       });
-
-      const result = await response.json();
 
       if (result.status === 'success') {
         alert('✅ Subcategoría agregada');
@@ -103,13 +91,7 @@ export default function CategoryManagement({ onClose }: CategoryManagementProps)
 
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:8000/categories/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoria: category }),
-      });
-
-      const result = await response.json();
+      const result = await api.post<{ status: string; message?: string }>('/categories/delete', { categoria: category });
 
       if (result.status === 'success') {
         alert('✅ Categoría eliminada');
@@ -136,16 +118,10 @@ export default function CategoryManagement({ onClose }: CategoryManagementProps)
 
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:8000/categories/delete-subcategory', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          categoria: category,
-          subcategoria: subcategory,
-        }),
+      const result = await api.post<{ status: string; message?: string }>('/categories/delete-subcategory', {
+        categoria: category,
+        subcategoria: subcategory,
       });
-
-      const result = await response.json();
 
       if (result.status === 'success') {
         alert('✅ Subcategoría eliminada');

@@ -4,6 +4,8 @@ import { Movement } from '../types/Movement';
 import SimilarMovementsModal from './SimilarMovementsModal';
 import CompactLoadingOverlay from './CompactLoadingOverlay';
 import Toast from './Toast';
+import { api } from '../services/api';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface CategorizeMovementsProps {
   movements: Movement[];
@@ -31,6 +33,7 @@ export default function CategorizeMovements({
   const [categories, setCategories] = useState<{ [key: string]: string[] }>({});
   const [filter, setFilter] = useState<'uncategorized' | 'categorized' | 'all'>('uncategorized');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [saving, setSaving] = useState(false);
   const [savingMessage, setSavingMessage] = useState('Buscando similares...');
   const [changes, setChanges] = useState<{
@@ -60,8 +63,7 @@ export default function CategorizeMovements({
   React.useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:8000/categories');
-        const data = await response.json();
+        const data = await api.get<{ status: string; categories: { [key: string]: string[] } }>('/categories');
         if (data.status === 'success') {
           setCategories(data.categories);
         }
@@ -71,29 +73,6 @@ export default function CategorizeMovements({
     };
     fetchCategories();
   }, []);
-
-  // ✅ AGREGAR: Debug de IDs de movimientos
-  useEffect(() => {
-    console.log('📊 MOVIMIENTOS RECIBIDOS EN COMPONENTE:');
-    console.log('Total:', movements.length);
-    console.log('Primeros 3 movimientos:');
-    movements.slice(0, 3).forEach((mov, idx) => {
-      console.log(`  [${idx}] ID: "${mov.id}" (tipo: ${typeof mov.id}), Desc: ${mov.descripcion}`);
-    });
-    
-    // ✅ VERIFICAR IDs ÚNICOS
-    const ids = movements.map(m => String(m.id));
-    const uniqueIds = new Set(ids);
-    console.log(`Movimientos totales: ${ids.length}, IDs únicos: ${uniqueIds.size}`);
-    
-    if (ids.length !== uniqueIds.size) {
-      console.error('❌ HAY IDs DUPLICADOS!');
-      const duplicados = ids.filter((id, idx) => ids.indexOf(id) !== idx);
-      console.error('IDs duplicados:', [...new Set(duplicados)]);
-    } else {
-      console.log('✅ Todos los IDs son únicos');
-    }
-  }, [movements]);
 
   // ✅ Función auxiliar para verificar si está sin categorizar
   const isUncategorized = (categoria: any): boolean => {
@@ -138,18 +117,18 @@ export default function CategorizeMovements({
     }
   }, [movements, filter, changes]);
 
-  // ✅ Filtrar por búsqueda
+  // ✅ Filtrar por búsqueda (debounced para reducir renders)
   const displayMovements = useMemo(() => {
-    if (!searchQuery.trim()) return filteredByTab;
-    
-    const query = searchQuery.toLowerCase();
-    return filteredByTab.filter(m => 
+    if (!debouncedSearchQuery.trim()) return filteredByTab;
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return filteredByTab.filter(m =>
       m.descripcion.toLowerCase().includes(query) ||
       m.fecha.includes(query) ||
       (m.categoria && m.categoria.toLowerCase().includes(query)) ||
       (m.subcategoria && m.subcategoria.toLowerCase().includes(query))
     );
-  }, [filteredByTab, searchQuery]);
+  }, [filteredByTab, debouncedSearchQuery]);
 
   // ✅ Contar sin categorizar y categorizados correctamente
   const uncategorizedCount = movements.filter(m => isUncategorized(m.categoria)).length;
@@ -199,19 +178,10 @@ export default function CategorizeMovements({
         subcategoria: changeData.subcategoria,
       }];
 
-      console.log('📤 Guardando directamente:', updates);
-
-      const response = await fetch('http://localhost:8000/movements/batch-categorize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          movements: updates,
-          learn: false,
-        }),
+      const result = await api.post<{ status: string; message?: string }>('/movements/batch-categorize', {
+        movements: updates,
+        learn: false,
       });
-
-      const result = await response.json();
-      console.log('✅ Respuesta del servidor:', result);
 
       if (result.status === 'success') {
         const updatedMovements = movements.map(mov => {
@@ -267,20 +237,12 @@ export default function CategorizeMovements({
         return;
       }
 
-      console.log('🔍 Buscando similares para:', movement.descripcion);
-
-      const response = await fetch('http://localhost:8000/movements/find-similar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          movement_id: movement.id,
-          descripcion: movement.descripcion,
-          categoria: data.categoria,
-          subcategoria: data.subcategoria,
-        }),
+      const result = await api.post<{ status: string; message?: string }>('/movements/find-similar', {
+        movement_id: movement.id,
+        descripcion: movement.descripcion,
+        categoria: data.categoria,
+        subcategoria: data.subcategoria,
       });
-
-      const result = await response.json();
 
       if (result.status === 'success') {
         setSimilarData(result);
@@ -319,16 +281,10 @@ export default function CategorizeMovements({
         };
       });
 
-      const response = await fetch('http://localhost:8000/movements/batch-categorize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          movements: updates,
-          learn: true,
-        }),
-      });
-
-      const result = await response.json();
+      const result = await api.post<{ status: string; message?: string; updated_count?: number }>(
+        '/movements/batch-categorize',
+        { movements: updates, learn: true },
+      );
 
       if (result.status === 'success') {
         const updatedMovements = movements.map(mov => {

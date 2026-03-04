@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import Analysis from './components/Analysis';
 import FileManager from './components/FileManager';
 import CategoryManagement from './components/CategoryManagement';
+import { api } from './services/api';
 import CategorizeMovements from './components/CategorizeMovements';
 import DateFilter from './components/DateFilter';
 import { DateFilterProvider } from './context/DateFilterContext';
@@ -29,16 +30,11 @@ function AppContent() {
       setProgress(10);
       setProgressMessage('Conectando al servidor...');
 
-      const response = await fetch('http://localhost:8000/movements');
-      
-      if (!response.ok) {
-        throw new Error('Error al cargar movimientos');
-      }
+      const data = await api.get<{ status: string; movimientos?: Movement[] }>('/movements');
 
       setProgress(50);
       setProgressMessage('Procesando datos...');
 
-      const data = await response.json();
       if (data.status === 'success') {
         setMovements(data.movimientos || []);
         setProgress(90);
