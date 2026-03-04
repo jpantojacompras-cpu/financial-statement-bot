@@ -1,9 +1,9 @@
 import React from 'react';
-import { Upload, BarChart3, TrendingUp, BarChart, Files, FolderOpen, Tags } from 'lucide-react';
+import { Upload, BarChart3, TrendingUp, BarChart, Files, FolderOpen, Tags, Brain } from 'lucide-react';
 
 interface SidebarProps {
-  currentPage: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize';
-  setCurrentPage: (page: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize') => void;
+  currentPage: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize' | 'patterns';
+  setCurrentPage: (page: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize' | 'patterns') => void;
 }
 
 export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
@@ -63,6 +63,14 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-100',
       hoverBg: 'hover:bg-indigo-50',
+    },
+    {
+      id: 'patterns',
+      label: 'IA Patrones',
+      icon: Brain,
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-100',
+      hoverBg: 'hover:bg-pink-50',
     },
   ];
 

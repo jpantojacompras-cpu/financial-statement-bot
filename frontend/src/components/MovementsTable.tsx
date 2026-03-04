@@ -9,6 +9,21 @@ interface MovementsTableProps {
 type SortField = 'fecha' | 'monto' | 'tipo' | 'categoria' | 'subcategoria' | 'none';
 type SortDirection = 'asc' | 'desc';
 
+function ConfidenceBar({ score }: { score?: number }) {
+  if (score === undefined || score === null || score === 0) return null;
+  const pct = Math.min(100, Math.max(0, score));
+  const color =
+    pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-400' : 'bg-red-400';
+  return (
+    <div className="flex items-center gap-1 mt-1" title={`Confianza IA: ${pct}%`}>
+      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div className={`${color} h-full`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs text-gray-400">{Math.round(pct)}%</span>
+    </div>
+  );
+}
+
 export default function MovementsTable({ movements }: MovementsTableProps) {
   const { selectedYear, selectedMonth, activeType } = useDateFilter();
   const [sortField, setSortField] = useState<SortField>('fecha');
@@ -182,7 +197,10 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
                     {getTipoTexto(mov.tipo)}
                   </span>
                 </td>
-                <td className="px-6 py-3 text-sm text-gray-700">{mov.categoria || '-'}</td>
+                <td className="px-6 py-3 text-sm text-gray-700">
+                    {mov.categoria || '-'}
+                    <ConfidenceBar score={mov.confianza} />
+                  </td>
                 <td className="px-6 py-3 text-sm text-gray-700">{mov.subcategoria || '-'}</td>
               </tr>
             ))}
