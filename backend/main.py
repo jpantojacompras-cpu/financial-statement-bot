@@ -1072,9 +1072,7 @@ async def find_similar_movements(request: dict):
         )
     
     except Exception as e:
-        logger.error(f"❌ Error en find_similar: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("❌ Error en find_similar: %s", e, exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}
@@ -1140,9 +1138,7 @@ async def batch_categorize_movements(request: dict):
         )
         
     except Exception as e:
-        logger.error(f"❌ Error en batch_categorize: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("❌ Error en batch_categorize: %s", e, exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}
