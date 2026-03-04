@@ -7,4 +7,7 @@ export interface Movement {
   archivo_referencia: string;
   categoria: string;
   subcategoria: string;
+  confianza?: number;
+  institucion?: string;
+  tipo_producto?: string;
 }

@@ -9,12 +9,13 @@ import Analysis from './components/Analysis';
 import FileManager from './components/FileManager';
 import CategoryManagement from './components/CategoryManagement';
 import CategorizeMovements from './components/CategorizeMovements';
+import PatternExplorer from './components/PatternExplorer';
 import DateFilter from './components/DateFilter';
 import { DateFilterProvider } from './context/DateFilterContext';
 
 function AppContent() {
   const [movements, setMovements] = useState<Movement[]>([]);
-  const [currentPage, setCurrentPage] = useState<'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize'>('upload');
+  const [currentPage, setCurrentPage] = useState<'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize' | 'patterns'>('upload');
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState('Cargando movimientos...');
@@ -87,7 +88,7 @@ function AppContent() {
       <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
 
       <main className="flex-1 overflow-auto">
-        {currentPage !== 'upload' && currentPage !== 'files' && currentPage !== 'categories' && (
+        {currentPage !== 'upload' && currentPage !== 'files' && currentPage !== 'categories' && currentPage !== 'patterns' && (
           <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
             <div className="flex items-center justify-between px-8 py-4">
               <h1 className="text-2xl font-bold text-gray-900">
@@ -104,7 +105,7 @@ function AppContent() {
           </div>
         )}
 
-        <div className={currentPage === 'categories' ? '' : 'p-8'}>
+        <div className={currentPage === 'categories' || currentPage === 'patterns' ? '' : 'p-8'}>
           {currentPage === 'upload' && (
             <FileUpload onMovementsLoaded={handleMovementsLoaded} />
           )}
@@ -136,7 +137,11 @@ function AppContent() {
             <FileManager />
           )}
 
-          {movements.length === 0 && currentPage !== 'upload' && currentPage !== 'files' && currentPage !== 'categories' && (
+          {currentPage === 'patterns' && (
+            <PatternExplorer />
+          )}
+
+          {movements.length === 0 && currentPage !== 'upload' && currentPage !== 'files' && currentPage !== 'categories' && currentPage !== 'patterns' && (
             <div className="text-center py-12">
               <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">No hay movimientos cargados</p>

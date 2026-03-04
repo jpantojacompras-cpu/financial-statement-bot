@@ -10,6 +10,10 @@ import asyncio
 from modules.file_reader import FileReader
 from modules.file_detector import FileDetector
 from modules.categorization_service import CategorizationService
+from modules.cache_manager import CacheManager
+from modules.pattern_db import PatternDB
+from modules.intelligent_categorizer import IntelligentCategorizer
+from modules.learning_engine import LearningEngine
 from difflib import SequenceMatcher
 import uuid
 
@@ -137,6 +141,18 @@ active_files = set()
 file_reader = FileReader()
 file_detector = FileDetector()
 categorization_service = CategorizationService()
+
+# Intelligent AI layer
+_pattern_db = PatternDB()
+_intelligent_categorizer = IntelligentCategorizer(
+    pattern_db=_pattern_db,
+    categorization_service=categorization_service,
+)
+_learning_engine = LearningEngine(
+    pattern_db=_pattern_db,
+    intelligent_categorizer=_intelligent_categorizer,
+)
+cache_manager = CacheManager()
 
 # =====================================================================
 # INICIALIZACIÓN DE CATEGORÍAS
@@ -418,7 +434,8 @@ async def upload_file(file: UploadFile = File(...)):
         register_uploaded_file(file_hash, file.filename, len(movements), movements, detection)
         active_files.add(file_hash)
         save_active_files()
-        
+        cache_manager.invalidate()
+
         processed_path = PROCESSED_DIR / file.filename
         shutil.move(str(temp_path), str(processed_path))
         
@@ -595,7 +612,8 @@ async def upload_batch(files: list[UploadFile] = File(...)):
             register_uploaded_file(file_hash, file.filename, len(movements), movements, detection)
             active_files.add(file_hash)
             save_active_files()
-            
+            cache_manager.invalidate()
+
             processed_path = PROCESSED_DIR / file.filename
             shutil.move(str(temp_path), str(processed_path))
             
@@ -736,7 +754,8 @@ async def activate_file(file_hash: str):
         file_info = uploaded_files_registry[file_hash]
         active_files.add(file_hash)
         save_active_files()
-        
+        cache_manager.invalidate()
+
         print(f"✅ Activado: {file_info['nombre']}")
         
         return {
@@ -763,7 +782,8 @@ async def deactivate_file(file_hash: str):
         file_info = uploaded_files_registry[file_hash]
         active_files.discard(file_hash)
         save_active_files()
-        
+        cache_manager.invalidate()
+
         print(f"⏸️  Desactivado: {file_info['nombre']}")
         
         return {
@@ -796,10 +816,11 @@ async def delete_uploaded_file(file_hash: str):
         
         active_files.discard(file_hash)
         save_active_files()
-        
+
         del uploaded_files_registry[file_hash]
         save_registry()
-        
+        cache_manager.invalidate()
+
         print(f"🗑️  Eliminado: {filename}")
         
         return {
@@ -815,19 +836,26 @@ async def delete_uploaded_file(file_hash: str):
 
 @app.get("/movements")
 async def get_movements():
-    """Retorna movimientos de archivos activos con IDs únicos"""
+    """Retorna movimientos de archivos activos con IDs únicos (con caché)"""
     global movements_db
-    
+
+    # ── Serve from cache if valid ─────────────────────────────────────
+    cached = cache_manager.get_movements()
+    if cached is not None:
+        print("⚡ GET /movements: sirviendo desde caché")
+        return cached
+
+    # ── Re-build from disk ────────────────────────────────────────────
     all_movements = []
-    
+
     print(f"\n📊 Obteniendo movimientos...")
     print(f"   Archivos activos: {len(active_files)} de {len(uploaded_files_registry)}")
-    
+
     for file_hash in active_files:
         if file_hash in uploaded_files_registry:
             file_info = uploaded_files_registry[file_hash]
             filename = file_info['nombre']
-            
+
             file_path = PROCESSED_DIR / filename
             if file_path.exists():
                 try:
@@ -835,14 +863,14 @@ async def get_movements():
                         movements = file_reader.read_pdf(str(file_path))
                     else:
                         movements = file_reader.read_xlsx(str(file_path))
-                    
+
                     # ✅ GENERAR IDs ÚNICOS (con índice)
                     movements = enrich_movements_with_ids(movements, filename)
-                    
+
                     if movements:
                         for movement in movements:
                             mov_id = movement.get('id')
-                            
+
                             # ✅ Buscar en la BD si tiene cambios guardados
                             if mov_id in movements_db:
                                 db_mov = movements_db[mov_id]
@@ -851,30 +879,45 @@ async def get_movements():
                             else:
                                 cat = movement.get('categoria', '').strip()
                                 subcat = movement.get('subcategoria', '').strip()
-                                
+
                                 if not cat or cat.lower() == 'sin categoría':
                                     movement['categoria'] = ''
                                     movement['subcategoria'] = ''
                                 else:
                                     movement['categoria'] = cat
                                     movement['subcategoria'] = subcat
-                            
+
                             movement['institucion'] = file_info.get('institucion', 'unknown')
                             movement['tipo_producto'] = file_info.get('tipo_producto', 'unknown')
-                        
+
+                            # Add AI confidence score
+                            if not movement.get('confianza'):
+                                _, _, confianza = _intelligent_categorizer.categorize(
+                                    descripcion=movement.get('descripcion', ''),
+                                    monto=movement.get('monto'),
+                                    banco=movement.get('institucion'),
+                                    fecha=movement.get('fecha'),
+                                )
+                                movement['confianza'] = confianza
+
                         print(f"   ✅ {filename}: {len(movements)} movimientos")
                         all_movements.extend(movements)
                 except Exception as e:
                     print(f"   ❌ {filename}: Error - {e}")
-    
+
     print(f"   Total: {len(all_movements)} movimientos\n")
-    
-    return {
+
+    payload = {
         "status": "success",
         "total_movimientos": len(all_movements),
         "archivos_activos": len(active_files),
-        "movimientos": all_movements
+        "movimientos": all_movements,
     }
+
+    # ── Populate cache ────────────────────────────────────────────────
+    cache_manager.set_movements(payload)
+
+    return payload
 
 @app.get("/health")
 async def health_check():
@@ -907,6 +950,7 @@ async def delete_all_files():
 
         save_registry()
         save_active_files()
+        cache_manager.invalidate()
 
         print("\n" + "="*70)
         print("🗑️  TODOS LOS ARCHIVOS HAN SIDO ELIMINADOS")
@@ -1083,6 +1127,7 @@ async def batch_categorize_movements(request: dict):
             updated_count += 1
         
         save_movements_db(movements_db)
+        cache_manager.invalidate()
         print(f"💾 Guardados {updated_count} movimientos en BD")
         
         return JSONResponse(
@@ -1425,6 +1470,99 @@ async def delete_subcategory(request: dict):
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
+
+
+# =====================================================================
+# ENDPOINTS DE APRENDIZAJE E IA
+# =====================================================================
+
+@app.get("/api/movements/search")
+async def search_movements(year: str = None, month: str = None):
+    """Búsqueda instantánea de movimientos por año/mes usando índice de fechas"""
+    results = cache_manager.search_by_date(year=year, month=month)
+    return {
+        "status": "success",
+        "total": len(results),
+        "movimientos": results,
+    }
+
+
+@app.get("/api/patterns")
+async def get_patterns():
+    """Retorna todos los patrones aprendidos por la IA"""
+    return {
+        "status": "success",
+        "total": len(_pattern_db),
+        "patterns": _pattern_db.all_patterns(),
+    }
+
+
+@app.post("/movements/auto-categorize")
+async def auto_categorize_movements(request: dict):
+    """Autocategoriza un batch de movimientos usando IA"""
+    movements = request.get("movements", [])
+    if not movements:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "message": "Lista vacía"},
+        )
+    updated = _learning_engine.auto_categorize_batch(movements)
+    return {
+        "status": "success",
+        "total": len(updated),
+        "movimientos": updated,
+    }
+
+
+@app.post("/movements/learn")
+async def learn_correction(request: dict):
+    """Registra la corrección de un usuario y entrena la IA"""
+    movement_id = request.get("movement_id", "")
+    descripcion = request.get("descripcion", "")
+    categoria = request.get("categoria", "")
+    subcategoria = request.get("subcategoria", "")
+    monto = request.get("monto")
+    banco = request.get("banco")
+    fecha = request.get("fecha")
+
+    if not descripcion or not categoria:
+        return JSONResponse(
+            status_code=400,
+            content={"status": "error", "message": "Faltan parámetros (descripcion, categoria)"},
+        )
+
+    result = _learning_engine.record_correction(
+        movement_id=movement_id,
+        descripcion=descripcion,
+        categoria=categoria,
+        subcategoria=subcategoria,
+        monto=monto,
+        banco=banco,
+        fecha=fecha,
+    )
+    # Invalidate cache so next GET /movements reflects new patterns
+    cache_manager.invalidate()
+    return {"status": "success", "learned": result}
+
+
+@app.get("/api/learning-stats")
+async def get_learning_stats():
+    """Dashboard de IA: patrones aprendidos, confianza, historial"""
+    stats = _learning_engine.get_stats()
+    return {"status": "success", **stats}
+
+
+@app.delete("/api/patterns/{pattern}")
+async def forget_pattern(pattern: str):
+    """Elimina un patrón aprendido"""
+    removed = _pattern_db.forget(pattern)
+    if removed:
+        cache_manager.invalidate()
+        return {"status": "success", "message": f"Patrón '{pattern}' eliminado"}
+    return JSONResponse(
+        status_code=404,
+        content={"status": "error", "message": f"Patrón '{pattern}' no encontrado"},
+    )
 
 
 if __name__ == "__main__":
