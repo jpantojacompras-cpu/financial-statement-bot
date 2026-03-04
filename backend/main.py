@@ -973,14 +973,23 @@ async def find_similar_movements(request: dict):
                             mov_descripcion = mov.get('descripcion', '').lower().strip()
                             input_descripcion = descripcion.lower().strip()
                             
+                            # ✅ Usar categorías de la BD si existen (más actualizadas que el archivo)
+                            if mov_id and mov_id in movements_db:
+                                db_entry = movements_db[mov_id]
+                                cat_actual = db_entry.get('categoria', '') or ''
+                                subcat_actual = db_entry.get('subcategoria', '') or ''
+                            else:
+                                cat_actual = mov.get('categoria', '') or ''
+                                subcat_actual = mov.get('subcategoria', '') or ''
+                            
                             if mov_descripcion == input_descripcion:
                                 similar_movements.append({
                                     "id": mov_id,
                                     "descripcion": mov.get('descripcion'),
                                     "fecha": mov.get('fecha'),
                                     "monto": mov.get('monto'),
-                                    "categoria_actual": mov.get('categoria', 'Sin Categoría'),
-                                    "subcategoria_actual": mov.get('subcategoria', 'Sin Subcategoría'),
+                                    "categoria_actual": cat_actual,
+                                    "subcategoria_actual": subcat_actual,
                                     "similitud": 100.0,
                                     "tipo_similitud": "Exacta"
                                 })
@@ -997,8 +1006,8 @@ async def find_similar_movements(request: dict):
                                         "descripcion": mov.get('descripcion'),
                                         "fecha": mov.get('fecha'),
                                         "monto": mov.get('monto'),
-                                        "categoria_actual": mov.get('categoria', 'Sin Categoría'),
-                                        "subcategoria_actual": mov.get('subcategoria', 'Sin Subcategoría'),
+                                        "categoria_actual": cat_actual,
+                                        "subcategoria_actual": subcat_actual,
                                         "similitud": round(similarity * 100, 1),
                                         "tipo_similitud": "Parcial"
                                     })
@@ -1056,10 +1065,18 @@ async def batch_categorize_movements(request: dict):
         updated_count = 0
         
         for update_data in movements_to_update:
-            mov_id = str(update_data.get('movement_id'))
+            mov_id = str(update_data.get('movement_id') or '').strip()
             categoria = update_data.get('categoria')
             subcategoria = update_data.get('subcategoria')
             descripcion = update_data.get('descripcion', '')
+            
+            if not mov_id or mov_id == 'None':
+                print(f"⚠️  Saltando movimiento con movement_id inválido: {update_data.get('movement_id')!r}")
+                continue
+            
+            if not categoria:
+                print(f"⚠️  Saltando {mov_id[:8]}...: categoría vacía")
+                continue
             
             print(f"   ✅ {descripcion[:50]}... → {categoria} / {subcategoria}")
             
