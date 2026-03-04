@@ -11,6 +11,45 @@ from modules.file_reader import FileReader
 from modules.file_detector import FileDetector
 from modules.categorization_service import CategorizationService
 from difflib import SequenceMatcher
+import uuid
+
+# =====================================================================
+# FUNCIÓN DE GENERACIÓN DE IDs CONSISTENTES
+# =====================================================================
+
+def generate_movement_id(movement: dict, filename: str = "") -> str:
+    """
+    Genera un ID único para un movimiento usando UUID
+    Esto garantiza unicidad absoluta sin colisiones
+    """
+    # Usar UUID basado en el contenido + filename para reproducibilidad
+    id_str = f"{filename}|{movement.get('fecha', '')}|{movement.get('descripcion', '')}|{movement.get('monto', '')}"
+    
+    # Crear un namespace UUID basado en el contenido
+    # Así obtenemos IDs determinísticos pero únicos
+    namespace = uuid.NAMESPACE_DNS
+    mov_uuid = uuid.uuid5(namespace, id_str)
+    
+    return str(mov_uuid)
+
+def enrich_movements_with_ids(movements: list, filename: str = "") -> list:
+    """Añade IDs únicos a los movimientos"""
+    seen = set()
+    for idx, mov in enumerate(movements):
+        if 'id' not in mov or not mov['id']:
+            base_id = generate_movement_id(mov, filename)
+            
+            # Si por alguna razón hay colisión, agregar sufijo
+            mov_id = base_id
+            counter = 1
+            while mov_id in seen:
+                mov_id = f"{base_id}-{counter}"
+                counter += 1
+            
+            mov['id'] = mov_id
+            seen.add(mov_id)
+    
+    return movements
 
 # =====================================================================
 # INICIALIZACIÓN DE BD DE MOVIMIENTOS
@@ -69,12 +108,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS - Solo localhost por ahora
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",      # Frontend Vite
-        "http://localhost:3000",      # Alternativa
+        "http://localhost:5173",
+        "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
     ],
@@ -90,9 +129,8 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 PROCESSED_DIR = Path("processed_files")
 PROCESSED_DIR.mkdir(exist_ok=True)
 
-# Configuración de carga masiva
-MAX_FILES_PER_BATCH = 10  # Máximo de archivos por carga
-MAX_FILE_SIZE_MB = 50  # Máximo tamaño por archivo en MB
+MAX_FILES_PER_BATCH = 10
+MAX_FILE_SIZE_MB = 50
 
 uploaded_files_registry = {}
 active_files = set()
@@ -108,14 +146,12 @@ def initialize_categories_json():
     """Inicializa el archivo JSON de categorías desde el CSV si no existe"""
     categories_path = Path("backend/data/categories.json")
     
-    # ✅ Si ya existe, NO hacer nada (preservar cambios del usuario)
     if categories_path.exists():
         print("✅ Categorías ya existen, preservando cambios del usuario")
         return
     
     print("🔄 Inicializando categorías desde CSV...")
     try:
-        # Leer categorías del servicio (que carga del CSV)
         all_categories_list = categorization_service.get_all_categories()
         categories_data = {}
         
@@ -123,7 +159,6 @@ def initialize_categories_json():
             subcats = categorization_service.get_subcategories(category)
             categories_data[category] = subcats if subcats else ["Sin Subcategoría"]
         
-        # Guardar en JSON
         categories_path.parent.mkdir(parents=True, exist_ok=True)
         with open(categories_path, 'w', encoding='utf-8') as f:
             json.dump(categories_data, f, ensure_ascii=False, indent=2)
@@ -162,13 +197,11 @@ def register_uploaded_file(file_hash: str, filename: str, movements_count: int, 
         "hash": file_hash
     }
     
-    # Agregar información de detección si está disponible
     if detection:
         file_info["institucion"] = detection.get("institution", "unknown")
         file_info["tipo_producto"] = detection.get("product_type", "unknown")
         file_info["deteccion_confianza"] = detection.get("confidence", 0.0)
     
-    # ✅ Calcular último mes desde los movimientos
     if movements:
         fechas = [m.get('fecha') for m in movements if m.get('fecha')]
         if fechas:
@@ -211,13 +244,12 @@ def load_active_files():
             data = json.load(f)
             active_files = set(data.get("active", []))
 
-# Cargar registros al iniciar
 load_registry()
 load_active_files()
 initialize_categories_json()
 
 # =====================================================================
-# RUTAS API
+# RUTAS API - CARGA Y GESTIÓN DE ARCHIVOS
 # =====================================================================
 
 @app.get("/")
@@ -238,7 +270,6 @@ async def root():
 @app.get("/processing-status")
 async def get_processing_status():
     """Retorna el estado del procesamiento"""
-    global file_processing_progress
     return file_processing_progress
 
 @app.post("/upload")
@@ -258,7 +289,6 @@ async def upload_file(file: UploadFile = File(...)):
         file_processing_progress["progress"] = 5
         file_processing_progress["message"] = f"Validando {file.filename}..."
         
-        # Validar extensión
         allowed_extensions = ['.xlsx', '.xls', '.pdf']
         file_ext = Path(file.filename).suffix.lower()
         
@@ -274,7 +304,6 @@ async def upload_file(file: UploadFile = File(...)):
                 }
             )
         
-        # Guardar temporalmente
         temp_path = UPLOAD_DIR / file.filename
         with open(temp_path, "wb") as f:
             content = await file.read()
@@ -283,7 +312,6 @@ async def upload_file(file: UploadFile = File(...)):
         file_processing_progress["progress"] = 15
         file_processing_progress["message"] = f"Verificando tamaño de {file.filename}..."
         
-        # Validar tamaño
         file_size_mb = temp_path.stat().st_size / (1024 * 1024)
         if file_size_mb > MAX_FILE_SIZE_MB:
             temp_path.unlink()
@@ -303,14 +331,12 @@ async def upload_file(file: UploadFile = File(...)):
         file_processing_progress["progress"] = 25
         file_processing_progress["message"] = f"Calculando hash de {file.filename}..."
         
-        # Calcular hash
         file_hash = calculate_file_hash(temp_path)
         print(f"🔐 Hash: {file_hash[:16]}...")
         
         file_processing_progress["progress"] = 35
         file_processing_progress["message"] = f"Verificando duplicados..."
         
-        # Verificar duplicado
         duplicate_check = is_file_already_uploaded(file_hash)
         
         if duplicate_check["is_duplicate"]:
@@ -340,7 +366,6 @@ async def upload_file(file: UploadFile = File(...)):
         file_processing_progress["progress"] = 45
         file_processing_progress["message"] = f"Detectando institución..."
         
-        # Detectar institución y tipo de producto automáticamente
         print(f"🔍 Detectando institución y tipo de producto...")
         detection = file_detector.detect_from_file(str(temp_path))
         print(f"🏦 Institución detectada: {detection['institution']} (confianza: {detection['confidence']})")
@@ -349,7 +374,6 @@ async def upload_file(file: UploadFile = File(...)):
         file_processing_progress["progress"] = 60
         file_processing_progress["message"] = f"Extrayendo movimientos..."
         
-        # Procesar
         print(f"🔄 Extrayendo movimientos...")
         movements = []
         
@@ -358,11 +382,12 @@ async def upload_file(file: UploadFile = File(...)):
         else:
             movements = file_reader.read_xlsx(str(temp_path))
         
+        # ✅ GENERAR IDs CONSISTENTES
+        movements = enrich_movements_with_ids(movements, file.filename)
+        
         file_processing_progress["progress"] = 75
         file_processing_progress["message"] = f"Inicializando categorías..."
         
-        # ✅ NO CATEGORIZAR AUTOMÁTICAMENTE
-        # Inicializar categorías vacías
         for movement in movements:
             if 'categoria' not in movement:
                 movement['categoria'] = ''
@@ -382,7 +407,6 @@ async def upload_file(file: UploadFile = File(...)):
                 }
             )
         
-        # Agregar información de detección a cada movimiento
         for movement in movements:
             movement['institucion'] = detection['institution']
             movement['tipo_producto'] = detection['product_type']
@@ -391,7 +415,6 @@ async def upload_file(file: UploadFile = File(...)):
         file_processing_progress["progress"] = 95
         file_processing_progress["message"] = f"Guardando {file.filename}..."
         
-        # Registrar y activar
         register_uploaded_file(file_hash, file.filename, len(movements), movements, detection)
         active_files.add(file_hash)
         save_active_files()
@@ -405,7 +428,6 @@ async def upload_file(file: UploadFile = File(...)):
         print(f"✅ ÉXITO: {len(movements)} movimientos")
         print(f"🔌 Estado: ACTIVO")
         
-        # Esperar un poco antes de marcar como no procesando
         await asyncio.sleep(2)
         file_processing_progress["is_processing"] = False
         
@@ -445,7 +467,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.post("/upload-batch")
 async def upload_batch(files: list[UploadFile] = File(...)):
-    """Carga múltiples archivos (máximo definido)"""
+    """Carga múltiples archivos"""
     global file_processing_progress
     
     print(f"\n{'='*70}")
@@ -457,7 +479,6 @@ async def upload_batch(files: list[UploadFile] = File(...)):
     file_processing_progress["total_files"] = len(files)
     file_processing_progress["processed_files"] = 0
     
-    # Validar cantidad
     if len(files) > MAX_FILES_PER_BATCH:
         print(f"❌ RECHAZO: Demasiados archivos ({len(files)} > {MAX_FILES_PER_BATCH})")
         file_processing_progress["is_processing"] = False
@@ -487,7 +508,6 @@ async def upload_batch(files: list[UploadFile] = File(...)):
         
         temp_path = None
         try:
-            # Validar extensión
             file_ext = Path(file.filename).suffix.lower()
             if file_ext not in ['.xlsx', '.xls', '.pdf']:
                 print(f"   ❌ Extensión no permitida")
@@ -500,14 +520,12 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 errors += 1
                 continue
             
-            # Guardar temporalmente
             temp_path = UPLOAD_DIR / file.filename
             content = await file.read()
             
             with open(temp_path, "wb") as f:
                 f.write(content)
             
-            # Validar tamaño
             file_size_mb = temp_path.stat().st_size / (1024 * 1024)
             if file_size_mb > MAX_FILE_SIZE_MB:
                 temp_path.unlink()
@@ -523,10 +541,8 @@ async def upload_batch(files: list[UploadFile] = File(...)):
             
             print(f"   ✅ Guardado ({file_size_mb:.2f}MB)")
             
-            # Calcular hash
             file_hash = calculate_file_hash(temp_path)
             
-            # Verificar duplicado
             duplicate_check = is_file_already_uploaded(file_hash)
             if duplicate_check["is_duplicate"]:
                 temp_path.unlink()
@@ -540,17 +556,18 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 duplicates += 1
                 continue
             
-            # Detectar institución y tipo de producto
             print(f"   🔍 Detectando institución y tipo...")
             detection = file_detector.detect_from_file(str(temp_path))
             print(f"   🏦 {detection['institution']} - {detection['product_type']} (confianza: {detection['confidence']})")
             
-            # Procesar
             movements = []
             if file_ext == '.pdf':
                 movements = file_reader.read_pdf(str(temp_path))
             else:
                 movements = file_reader.read_xlsx(str(temp_path))
+            
+            # ✅ GENERAR IDs CONSISTENTES
+            movements = enrich_movements_with_ids(movements, file.filename)
                 
             if not movements:
                 temp_path.unlink()
@@ -564,21 +581,17 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 errors += 1
                 continue
             
-            # ✅ NO CATEGORIZAR AUTOMÁTICAMENTE
-            # Inicializar categorías vacías
             for movement in movements:
                 if 'categoria' not in movement:
                     movement['categoria'] = ''
                 if 'subcategoria' not in movement:
                     movement['subcategoria'] = ''
 
-            # Agregar información de detección a cada movimiento
             for movement in movements:
                 movement['institucion'] = detection['institution']
                 movement['tipo_producto'] = detection['product_type']
                 movement['deteccion_confianza'] = detection['confidence']
             
-            # Registrar y activar
             register_uploaded_file(file_hash, file.filename, len(movements), movements, detection)
             active_files.add(file_hash)
             save_active_files()
@@ -655,13 +668,10 @@ async def get_uploaded_files():
     try:
         archivos = []
         
-        # Usar directamente el registro
         for file_hash, file_info in uploaded_files_registry.items():
             
-            # Si no tiene ultimo_mes, calcularlo ahora
             if "ultimo_mes" not in file_info or file_info.get("ultimo_mes") == "N/A":
                 try:
-                    # Buscar archivo
                     file_path = None
                     nombre_archivo = file_info.get("nombre", "")
                     
@@ -672,7 +682,10 @@ async def get_uploaded_files():
                                 break
                     
                     if file_path:
-                        movements = file_reader.read(str(file_path))
+                        if nombre_archivo.lower().endswith('.pdf'):
+                            movements = file_reader.read_pdf(str(file_path))
+                        else:
+                            movements = file_reader.read_xlsx(str(file_path))
                         
                         if movements:
                             fechas = [m.get('fecha') for m in movements if m.get('fecha')]
@@ -802,7 +815,7 @@ async def delete_uploaded_file(file_hash: str):
 
 @app.get("/movements")
 async def get_movements():
-    """Retorna movimientos de archivos activos"""
+    """Retorna movimientos de archivos activos con IDs únicos"""
     global movements_db
     
     all_movements = []
@@ -823,11 +836,12 @@ async def get_movements():
                     else:
                         movements = file_reader.read_xlsx(str(file_path))
                     
+                    # ✅ GENERAR IDs ÚNICOS (con índice)
+                    movements = enrich_movements_with_ids(movements, filename)
+                    
                     if movements:
-                        for idx, movement in enumerate(movements):
-                            # Crear ID consistente
-                            mov_id = str(hash(f"{filename}_{idx}_{movement.get('fecha')}_{movement.get('descripcion')}"))
-                            movement['id'] = mov_id
+                        for movement in movements:
+                            mov_id = movement.get('id')
                             
                             # ✅ Buscar en la BD si tiene cambios guardados
                             if mov_id in movements_db:
@@ -835,11 +849,9 @@ async def get_movements():
                                 movement['categoria'] = db_mov.get('categoria', '')
                                 movement['subcategoria'] = db_mov.get('subcategoria', '')
                             else:
-                                # Obtener categoría del archivo
                                 cat = movement.get('categoria', '').strip()
                                 subcat = movement.get('subcategoria', '').strip()
                                 
-                                # ✅ Si dice "Sin Categoría" o está vacío, hacerlo null
                                 if not cat or cat.lower() == 'sin categoría':
                                     movement['categoria'] = ''
                                     movement['subcategoria'] = ''
@@ -884,18 +896,15 @@ async def delete_all_files():
     try:
         global uploaded_files_registry, active_files
 
-        # Eliminar archivos físicos
         if PROCESSED_DIR.exists():
             for file_path in PROCESSED_DIR.glob("*.pdf"):
                 file_path.unlink()
             for file_path in PROCESSED_DIR.glob("*.xlsx"):
                 file_path.unlink()
 
-        # Limpiar registros
         uploaded_files_registry = {}
         active_files = set()
 
-        # Guardar cambios
         save_registry()
         save_active_files()
 
@@ -914,13 +923,190 @@ async def delete_all_files():
             content={"status": "error", "message": str(e)}
         )
 
-# ==========================================
-# 🎯 ENDPOINTS DE CATEGORIZACIÓN
-# ==========================================
+# =====================================================================
+# ENDPOINTS DE CATEGORIZACIÓN
+# =====================================================================
+
+@app.post("/movements/find-similar")
+async def find_similar_movements(request: dict):
+    """Encuentra movimientos similares a uno dado"""
+    try:
+        movement_id = request.get("movement_id")
+        descripcion = request.get("descripcion", "")
+        categoria = request.get("categoria")
+        subcategoria = request.get("subcategoria")
+        
+        if not all([movement_id, descripcion]):
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "Faltan parámetros"}
+            )
+        
+        similar_movements = []
+        threshold = 0.65
+        
+        for file_hash in active_files:
+            if file_hash in uploaded_files_registry:
+                file_info = uploaded_files_registry[file_hash]
+                filename = file_info['nombre']
+                file_path = PROCESSED_DIR / filename
+                
+                if file_path.exists():
+                    try:
+                        if filename.lower().endswith('.pdf'):
+                            movements = file_reader.read_pdf(str(file_path))
+                        else:
+                            movements = file_reader.read_xlsx(str(file_path))
+                        
+                        # ✅ GENERAR IDs ÚNICOS
+                        movements = enrich_movements_with_ids(movements, filename)
+                        
+                        if not movements:
+                            continue
+                        
+                        for mov in movements:
+                            mov_id = mov.get('id')
+                            
+                            if mov_id == movement_id:
+                                continue
+                            
+                            mov_descripcion = mov.get('descripcion', '').lower().strip()
+                            input_descripcion = descripcion.lower().strip()
+                            
+                            if mov_descripcion == input_descripcion:
+                                similar_movements.append({
+                                    "id": mov_id,
+                                    "descripcion": mov.get('descripcion'),
+                                    "fecha": mov.get('fecha'),
+                                    "monto": mov.get('monto'),
+                                    "categoria_actual": mov.get('categoria', 'Sin Categoría'),
+                                    "subcategoria_actual": mov.get('subcategoria', 'Sin Subcategoría'),
+                                    "similitud": 100.0,
+                                    "tipo_similitud": "Exacta"
+                                })
+                            else:
+                                similarity = SequenceMatcher(
+                                    None,
+                                    input_descripcion,
+                                    mov_descripcion
+                                ).ratio()
+                                
+                                if similarity >= threshold:
+                                    similar_movements.append({
+                                        "id": mov_id,
+                                        "descripcion": mov.get('descripcion'),
+                                        "fecha": mov.get('fecha'),
+                                        "monto": mov.get('monto'),
+                                        "categoria_actual": mov.get('categoria', 'Sin Categoría'),
+                                        "subcategoria_actual": mov.get('subcategoria', 'Sin Subcategoría'),
+                                        "similitud": round(similarity * 100, 1),
+                                        "tipo_similitud": "Parcial"
+                                    })
+                    
+                    except Exception as e:
+                        print(f"⚠️  Error procesando {filename}: {e}")
+        
+        similar_movements.sort(
+            key=lambda x: (x['tipo_similitud'] != 'Exacta', -x['similitud'])
+        )
+        
+        print(f"✅ {len(similar_movements)} similares encontrados para: '{descripcion}'")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "original": {
+                    "id": movement_id,
+                    "descripcion": descripcion,
+                    "categoria": categoria,
+                    "subcategoria": subcategoria
+                },
+                "similares": similar_movements[:50],
+                "encontrados": len(similar_movements)
+            }
+        )
+    
+    except Exception as e:
+        print(f"❌ Error en find_similar: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
+
+@app.post("/movements/batch-categorize")
+async def batch_categorize_movements(request: dict):
+    """Categoriza múltiples movimientos"""
+    global movements_db
+    
+    try:
+        movements_to_update = request.get("movements", [])
+        learn = request.get("learn", True)
+        
+        if not movements_to_update:
+            return JSONResponse(
+                status_code=400,
+                content={"status": "error", "message": "Lista vacía"}
+            )
+        
+        print(f"\n🔄 Actualizando {len(movements_to_update)} movimientos")
+        
+        updated_count = 0
+        
+        for update_data in movements_to_update:
+            mov_id = str(update_data.get('movement_id'))
+            categoria = update_data.get('categoria')
+            subcategoria = update_data.get('subcategoria')
+            descripcion = update_data.get('descripcion', '')
+            
+            print(f"   ✅ {descripcion[:50]}... → {categoria} / {subcategoria}")
+            
+            movements_db[mov_id] = {
+                'categoria': categoria,
+                'subcategoria': subcategoria,
+                'descripcion': descripcion,
+                'actualizado': datetime.now().isoformat()
+            }
+            
+            if learn and descripcion and categoria:
+                try:
+                    categorization_service.learn_mapping(
+                        pattern=descripcion,
+                        categoria=categoria,
+                        subcategoria=subcategoria
+                    )
+                except Exception as e:
+                    print(f"⚠️  Error aprendiendo patrón: {e}")
+            
+            updated_count += 1
+        
+        save_movements_db(movements_db)
+        print(f"💾 Guardados {updated_count} movimientos en BD")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": f"{updated_count} movimientos categorizados",
+                "updated_count": updated_count,
+                "learn": learn
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ Error en batch_categorize: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
 @app.post("/movements/categorize")
 async def categorize_movement(request: dict):
-    """Recategoriza un movimiento individual y aprende el patrón"""
+    """Recategoriza un movimiento individual"""
     try:
         movement_id = request.get("movement_id")
         descripcion = request.get("descripcion", "")
@@ -937,7 +1123,6 @@ async def categorize_movement(request: dict):
                 }
             )
         
-        # Aprender patrón
         if learn and descripcion:
             categorization_service.learn_mapping(
                 pattern=descripcion,
@@ -965,81 +1150,11 @@ async def categorize_movement(request: dict):
             content={"status": "error", "message": str(e)}
         )
 
-
-@app.post("/movements/batch-categorize")
-async def batch_categorize_movements(request: dict):
-    """Categoriza SOLO los movimientos enviados"""
-    global movements_db
-    
-    try:
-        movements_to_update = request.get("movements", [])
-        learn = request.get("learn", True)
-        
-        if not movements_to_update:
-            return JSONResponse(
-                status_code=400,
-                content={"status": "error", "message": "Lista vacía"}
-            )
-        
-        print(f"\n🔄 Actualizando {len(movements_to_update)} movimientos")
-        
-        updated_count = 0
-        
-        # Actualizar en la BD
-        for update_data in movements_to_update:
-            mov_id = str(update_data.get('movement_id'))
-            categoria = update_data.get('categoria')
-            subcategoria = update_data.get('subcategoria')
-            descripcion = update_data.get('descripcion', '')
-            
-            print(f"   📝 ID: {mov_id[:20]}... → {categoria} / {subcategoria}")
-            
-            # Guardar en BD
-            movements_db[mov_id] = {
-                'categoria': categoria,
-                'subcategoria': subcategoria,
-                'descripcion': descripcion,
-                'actualizado': datetime.now().isoformat()
-            }
-            
-            # Aprender patrón
-            if learn and descripcion:
-                categorization_service.learn_mapping(
-                    pattern=descripcion,
-                    categoria=categoria,
-                    subcategoria=subcategoria
-                )
-            
-            updated_count += 1
-        
-        # ✅ GUARDAR LA BD A ARCHIVO
-        save_movements_db(movements_db)
-        print(f"✅ {updated_count} movimientos guardados en BD")
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "success",
-                "message": f"{updated_count} movimientos categorizados",
-                "updated_count": updated_count
-            }
-        )
-        
-    except Exception as e:
-        print(f"❌ Error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return JSONResponse(
-            status_code=500,
-            content={"status": "error", "message": str(e)}
-        )
-
-
 @app.get("/categorization-stats")
 async def get_categorization_stats():
     """Retorna estadísticas de categorización"""
     try:
-        db_path = Path("backend/data/movements.json")
+        db_path = Path("backend/data/movements_db.json")
         if not db_path.exists():
             return JSONResponse(
                 status_code=200,
@@ -1054,11 +1169,8 @@ async def get_categorization_stats():
                 }
             )
         
-        with open(db_path, 'r', encoding='utf-8') as f:
-            all_movements = json.load(f)
-        
-        total = len(all_movements)
-        categorized = len([m for m in all_movements if m.get('categoria') != 'Sin Categoría'])
+        total = len(movements_db)
+        categorized = len([m for m in movements_db.values() if m.get('categoria') and m.get('categoria') != 'Sin Categoría'])
         uncategorized = total - categorized
         rate = (categorized / total * 100) if total > 0 else 0
         
@@ -1084,116 +1196,9 @@ async def get_categorization_stats():
             }
         )
 
-@app.post("/movements/find-similar")
-async def find_similar_movements(request: dict):
-    """Encuentra movimientos similares a uno dado"""
-    try:
-        from difflib import SequenceMatcher
-        
-        movement_id = request.get("movement_id")
-        descripcion = request.get("descripcion", "")
-        categoria = request.get("categoria")
-        subcategoria = request.get("subcategoria")
-        
-        if not all([movement_id, descripcion]):
-            return JSONResponse(
-                status_code=400,
-                content={"status": "error", "message": "Faltan parámetros"}
-            )
-        
-        # Buscar similares en los movimientos activos
-        similar_movements = []
-        threshold = 0.65  # 65% de similitud
-        
-        for file_hash in active_files:
-            if file_hash in uploaded_files_registry:
-                file_info = uploaded_files_registry[file_hash]
-                filename = file_info['nombre']
-                file_path = PROCESSED_DIR / filename
-                
-                if file_path.exists():
-                    try:
-                        if filename.lower().endswith('.pdf'):
-                            movements = file_reader.read_pdf(str(file_path))
-                        else:
-                            movements = file_reader.read_xlsx(str(file_path))
-                        
-                        if movements:
-                            for mov in movements:
-                                # No incluir el movimiento original
-                                if mov.get('id') == movement_id:
-                                    continue
-                                
-                                mov_descripcion = mov.get('descripcion', '').lower().strip()
-                                input_descripcion = descripcion.lower().strip()
-                                
-                                # Primero: si es EXACTAMENTE igual, siempre incluir
-                                if mov_descripcion == input_descripcion:
-                                    similar_movements.append({
-                                        "id": mov.get('id'),
-                                        "descripcion": mov.get('descripcion'),
-                                        "fecha": mov.get('fecha'),
-                                        "monto": mov.get('monto'),
-                                        "categoria_actual": mov.get('categoria'),
-                                        "subcategoria_actual": mov.get('subcategoria'),
-                                        "similitud": 100.0,
-                                        "tipo_similitud": "Exacta"
-                                    })
-                                else:
-                                    # Segundo: calcular similitud por SequenceMatcher
-                                    similarity = SequenceMatcher(
-                                        None,
-                                        input_descripcion,
-                                        mov_descripcion
-                                    ).ratio()
-                                    
-                                    # Solo si supera threshold
-                                    if similarity >= threshold:
-                                        similar_movements.append({
-                                            "id": mov.get('id'),
-                                            "descripcion": mov.get('descripcion'),
-                                            "fecha": mov.get('fecha'),
-                                            "monto": mov.get('monto'),
-                                            "categoria_actual": mov.get('categoria'),
-                                            "subcategoria_actual": mov.get('subcategoria'),
-                                            "similitud": round(similarity * 100, 1),
-                                            "tipo_similitud": "Parcial"
-                                        })
-                    except Exception as e:
-                        print(f"Error procesando {filename}: {e}")
-        
-        # Ordenar: primero exactas, luego por similitud descendente
-        similar_movements.sort(key=lambda x: (x['tipo_similitud'] != 'Exacta', -x['similitud']))
-        
-        print(f"🔍 Encontrados {len(similar_movements)} similares para: {descripcion}")
-        for mov in similar_movements[:5]:
-            print(f"   - {mov['similitud']}% ({mov['tipo_similitud']}): {mov['descripcion']}")
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "success",
-                "original": {
-                    "id": movement_id,
-                    "descripcion": descripcion,
-                    "categoria": categoria,
-                    "subcategoria": subcategoria
-                },
-                "similares": similar_movements,
-                "encontrados": len(similar_movements)
-            }
-        )
-    
-    except Exception as e:
-        print(f"❌ Error en find_similar: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"status": "error", "message": str(e)}
-        )
-
-# ==========================================
-# 🎯 ENDPOINTS DE CATEGORÍAS
-# ==========================================
+# =====================================================================
+# ENDPOINTS DE CATEGORÍAS
+# =====================================================================
 
 @app.get("/categories")
 async def get_categories():
@@ -1205,7 +1210,6 @@ async def get_categories():
             with open(categories_path, 'r', encoding='utf-8') as f:
                 categories_data = json.load(f)
         else:
-            # Retornar las categorías del servicio si no existe el JSON
             all_categories_list = categorization_service.get_all_categories()
             categories_data = {}
             for category in all_categories_list:
@@ -1225,7 +1229,6 @@ async def get_categories():
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
-
 
 @app.post("/categories/add")
 async def add_category(request: dict):
@@ -1274,7 +1277,6 @@ async def add_category(request: dict):
             content={"status": "error", "message": str(e)}
         )
 
-
 @app.post("/categories/delete")
 async def delete_category(request: dict):
     """Elimina una categoría"""
@@ -1320,7 +1322,6 @@ async def delete_category(request: dict):
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
-
 
 @app.post("/categories/add-subcategory")
 async def add_subcategory(request: dict):
@@ -1376,7 +1377,6 @@ async def add_subcategory(request: dict):
             status_code=500,
             content={"status": "error", "message": str(e)}
         )
-
 
 @app.post("/categories/delete-subcategory")
 async def delete_subcategory(request: dict):
