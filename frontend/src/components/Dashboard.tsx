@@ -22,7 +22,6 @@ const Dashboard: React.FC<DashboardProps> = ({ movements: initialMovements }) =>
   const filteredMovements = useFilteredMovements(movements);
 
   const handleMovementsUpdate = (updatedMovements: Movement[]) => {
-    console.log('📊 Dashboard: Movimientos actualizados');
     setMovements(updatedMovements);
   };
 

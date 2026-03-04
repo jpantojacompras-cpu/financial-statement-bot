@@ -1,3 +1,24 @@
+# Node
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Runtime data / uploads
+processed_files/
+uploads/
+
+# Log files
+*.log
+*INFO*.txt
+*POST*.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

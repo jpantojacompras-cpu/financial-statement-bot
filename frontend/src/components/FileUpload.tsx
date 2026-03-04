@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, CheckCircle, AlertCircle, XCircle, Plus, X } from 'lucide-react';
+import { API_BASE_URL } from '../config/constants';
 
 interface Movement {
   id: number;
@@ -46,7 +47,7 @@ export default function FileUpload({ onMovementsLoaded }: FileUploadProps) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8000/upload', {
+      const response = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -122,7 +123,7 @@ export default function FileUpload({ onMovementsLoaded }: FileUploadProps) {
     });
 
     try {
-      const response = await fetch('http://localhost:8000/upload-batch', {
+      const response = await fetch(`${API_BASE_URL}/upload-batch`, {
         method: 'POST',
         body: formData,
       });

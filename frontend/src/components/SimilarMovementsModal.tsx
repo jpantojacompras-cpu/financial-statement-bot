@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AlertCircle, Check, X } from 'lucide-react';
 import CompactLoadingOverlay from './CompactLoadingOverlay';
 
@@ -57,48 +57,20 @@ export default function SimilarMovementsModal({
 }: SimilarMovementsModalProps) {
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
 
-  // ✅ DEBUG: Log de datos que recibimos
-  useEffect(() => {
-    console.log('=== SIMILAR MOVEMENTS MODAL DEBUG ===');
-    console.log('Original:', original);
-    console.log('Similares count:', similares.length);
-    console.log('Primeros 3 similares:');
-    similares.slice(0, 3).forEach((mov, idx) => {
-      console.log(`  [${idx}] ID: ${mov.id}, Desc: ${mov.descripcion}`);
-      console.log(`       Cat actual: "${mov.categoria_actual}", Subcat actual: "${mov.subcategoria_actual}"`);
-    });
-  }, [original, similares]);
-
   const newCategoria = normalizarCategoria(original.categoria);
   const newSubcategoria = normalizarSubcategoria(original.subcategoria);
 
-  console.log('Nueva categoría a asignar:', `"${newCategoria}"`);
-  console.log('Nueva subcategoría a asignar:', `"${newSubcategoria}"`);
-
   const filteredSimilares = useMemo(() => {
-    console.log('\n🔍 FILTRANDO...');
-    const filtered = similares.filter((mov, idx) => {
+    return similares.filter((mov) => {
       const actualCategoria = normalizarCategoria(mov.categoria_actual);
       const actualSubcategoria = normalizarSubcategoria(mov.subcategoria_actual);
-      
+
       const estaSinCategorizar = actualCategoria === '' && actualSubcategoria === '';
       const categoriaEsDiferente = actualCategoria !== newCategoria;
       const subcategoriaEsDiferente = actualSubcategoria !== newSubcategoria;
-      
-      const incluir = estaSinCategorizar || categoriaEsDiferente || subcategoriaEsDiferente;
-      
-      if (idx < 3) {
-        console.log(`  [${idx}] "${mov.descripcion}"`);
-        console.log(`       Actual: "${actualCategoria}" / "${actualSubcategoria}"`);
-        console.log(`       Sin cat: ${estaSinCategorizar}, Diff cat: ${categoriaEsDiferente}, Diff subcat: ${subcategoriaEsDiferente}`);
-        console.log(`       ➜ ${incluir ? '✅ MOSTRAR' : '❌ FILTRAR'}`);
-      }
-      
-      return incluir;
+
+      return estaSinCategorizar || categoriaEsDiferente || subcategoriaEsDiferente;
     });
-    
-    console.log(`\nTotal: ${similares.length} → ${filtered.length} después de filtrar`);
-    return filtered;
   }, [similares, newCategoria, newSubcategoria]);
 
   const filteredCount = similares.length - filteredSimilares.length;
@@ -126,7 +98,6 @@ export default function SimilarMovementsModal({
 
   const handleConfirm = () => {
     const selectedIds = Array.from(selectedIndices).map(idx => filteredSimilares[idx].id);
-    console.log('Confirmando con IDs:', selectedIds);
     onConfirm(selectedIds);
   };
 

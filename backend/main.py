@@ -1,9 +1,11 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pathlib import Path
 import shutil
 import json
+import threading
 from datetime import datetime
 import hashlib
 import asyncio
@@ -12,6 +14,14 @@ from modules.file_detector import FileDetector
 from modules.categorization_service import CategorizationService
 from difflib import SequenceMatcher
 import uuid
+from config import (
+    ALLOWED_ORIGINS,
+    MAX_FILES_PER_BATCH,
+    MAX_FILE_SIZE_MB,
+    BACKEND_HOST,
+    BACKEND_PORT,
+)
+from logging_config import logger
 
 # =====================================================================
 # FUNCIÓN DE GENERACIÓN DE IDs CONSISTENTES
@@ -108,15 +118,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Gzip compression for large responses
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type"],
@@ -129,14 +137,24 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 PROCESSED_DIR = Path("processed_files")
 PROCESSED_DIR.mkdir(exist_ok=True)
 
-MAX_FILES_PER_BATCH = 10
-MAX_FILE_SIZE_MB = 50
-
 uploaded_files_registry = {}
 active_files = set()
 file_reader = FileReader()
 file_detector = FileDetector()
 categorization_service = CategorizationService()
+
+# In-memory movements cache with thread safety
+_movements_cache: dict = {}
+_movements_cache_lock = threading.Lock()
+
+# =====================================================================
+# CACHÉ DE MOVIMIENTOS
+# =====================================================================
+
+def invalidate_movements_cache() -> None:
+    """Invalida el caché de movimientos (llamar al modificar archivos activos)."""
+    with _movements_cache_lock:
+        _movements_cache.clear()
 
 # =====================================================================
 # INICIALIZACIÓN DE CATEGORÍAS
@@ -147,10 +165,10 @@ def initialize_categories_json():
     categories_path = Path("backend/data/categories.json")
     
     if categories_path.exists():
-        print("✅ Categorías ya existen, preservando cambios del usuario")
+        logger.info("✅ Categorías ya existen, preservando cambios del usuario")
         return
     
-    print("🔄 Inicializando categorías desde CSV...")
+    logger.info("🔄 Inicializando categorías desde CSV...")
     try:
         all_categories_list = categorization_service.get_all_categories()
         categories_data = {}
@@ -163,9 +181,9 @@ def initialize_categories_json():
         with open(categories_path, 'w', encoding='utf-8') as f:
             json.dump(categories_data, f, ensure_ascii=False, indent=2)
         
-        print(f"✅ Categorías inicializadas en JSON: {len(categories_data)} categorías")
+        logger.info(f"✅ Categorías inicializadas en JSON: {len(categories_data)} categorías")
     except Exception as e:
-        print(f"⚠️  Error inicializando categorías: {e}")
+        logger.warning(f"⚠️  Error inicializando categorías: {e}")
 
 # =====================================================================
 # FUNCIONES AUXILIARES
@@ -279,10 +297,10 @@ async def upload_file(file: UploadFile = File(...)):
     
     temp_path = None
     try:
-        print(f"\n{'='*70}")
-        print(f"📁 SOLICITUD DE CARGA INDIVIDUAL")
-        print(f"{'='*70}")
-        print(f"📄 Archivo: {file.filename}")
+        logger.info(f"\n{'='*70}")
+        logger.info(f"📁 SOLICITUD DE CARGA INDIVIDUAL")
+        logger.info(f"{'='*70}")
+        logger.info(f"📄 Archivo: {file.filename}")
         
         file_processing_progress["is_processing"] = True
         file_processing_progress["current_file"] = file.filename
@@ -293,7 +311,7 @@ async def upload_file(file: UploadFile = File(...)):
         file_ext = Path(file.filename).suffix.lower()
         
         if file_ext not in allowed_extensions:
-            print(f"❌ RECHAZO: Extensión no permitida ({file_ext})")
+            logger.error(f"❌ RECHAZO: Extensión no permitida ({file_ext})")
             file_processing_progress["is_processing"] = False
             return JSONResponse(
                 status_code=400,
@@ -315,7 +333,7 @@ async def upload_file(file: UploadFile = File(...)):
         file_size_mb = temp_path.stat().st_size / (1024 * 1024)
         if file_size_mb > MAX_FILE_SIZE_MB:
             temp_path.unlink()
-            print(f"❌ Archivo muy grande: {file_size_mb:.2f}MB (máx: {MAX_FILE_SIZE_MB}MB)")
+            logger.error(f"❌ Archivo muy grande: {file_size_mb:.2f}MB (máx: {MAX_FILE_SIZE_MB}MB)")
             file_processing_progress["is_processing"] = False
             return JSONResponse(
                 status_code=413,
@@ -326,13 +344,13 @@ async def upload_file(file: UploadFile = File(...)):
                 }
             )
         
-        print(f"✅ Archivo guardado: {file_size_mb:.2f}MB")
+        logger.info(f"✅ Archivo guardado: {file_size_mb:.2f}MB")
         
         file_processing_progress["progress"] = 25
         file_processing_progress["message"] = f"Calculando hash de {file.filename}..."
         
         file_hash = calculate_file_hash(temp_path)
-        print(f"🔐 Hash: {file_hash[:16]}...")
+        logger.info(f"🔐 Hash: {file_hash[:16]}...")
         
         file_processing_progress["progress"] = 35
         file_processing_progress["message"] = f"Verificando duplicados..."
@@ -340,7 +358,7 @@ async def upload_file(file: UploadFile = File(...)):
         duplicate_check = is_file_already_uploaded(file_hash)
         
         if duplicate_check["is_duplicate"]:
-            print(f"⚠️  ARCHIVO DUPLICADO")
+            logger.warning(f"⚠️  ARCHIVO DUPLICADO")
             temp_path.unlink()
             file_processing_progress["is_processing"] = False
             
@@ -361,20 +379,20 @@ async def upload_file(file: UploadFile = File(...)):
                 }
             )
         
-        print(f"✅ Archivo NUEVO")
+        logger.info(f"✅ Archivo NUEVO")
         
         file_processing_progress["progress"] = 45
         file_processing_progress["message"] = f"Detectando institución..."
         
-        print(f"🔍 Detectando institución y tipo de producto...")
+        logger.info(f"🔍 Detectando institución y tipo de producto...")
         detection = file_detector.detect_from_file(str(temp_path))
-        print(f"🏦 Institución detectada: {detection['institution']} (confianza: {detection['confidence']})")
-        print(f"💳 Tipo de producto: {detection['product_type']}")
+        logger.info(f"🏦 Institución detectada: {detection['institution']} (confianza: {detection['confidence']})")
+        logger.info(f"💳 Tipo de producto: {detection['product_type']}")
         
         file_processing_progress["progress"] = 60
         file_processing_progress["message"] = f"Extrayendo movimientos..."
         
-        print(f"🔄 Extrayendo movimientos...")
+        logger.info(f"🔄 Extrayendo movimientos...")
         movements = []
         
         if file_ext == '.pdf':
@@ -395,7 +413,7 @@ async def upload_file(file: UploadFile = File(...)):
                 movement['subcategoria'] = ''
 
         if not movements:
-            print(f"❌ Sin movimientos extraídos")
+            logger.error(f"❌ Sin movimientos extraídos")
             temp_path.unlink()
             file_processing_progress["is_processing"] = False
             return JSONResponse(
@@ -425,8 +443,8 @@ async def upload_file(file: UploadFile = File(...)):
         file_processing_progress["progress"] = 100
         file_processing_progress["message"] = f"✅ {file.filename} cargado"
         
-        print(f"✅ ÉXITO: {len(movements)} movimientos")
-        print(f"🔌 Estado: ACTIVO")
+        logger.info(f"✅ ÉXITO: {len(movements)} movimientos")
+        logger.info(f"🔌 Estado: ACTIVO")
         
         await asyncio.sleep(2)
         file_processing_progress["is_processing"] = False
@@ -450,7 +468,7 @@ async def upload_file(file: UploadFile = File(...)):
         )
         
     except Exception as e:
-        print(f"❌ ERROR: {str(e)}")
+        logger.error(f"❌ ERROR: {str(e)}")
         file_processing_progress["is_processing"] = False
         
         if temp_path and temp_path.exists():
@@ -470,17 +488,17 @@ async def upload_batch(files: list[UploadFile] = File(...)):
     """Carga múltiples archivos"""
     global file_processing_progress
     
-    print(f"\n{'='*70}")
-    print(f"📁 SOLICITUD DE CARGA MASIVA")
-    print(f"{'='*70}")
-    print(f"📦 Total archivos: {len(files)}")
+    logger.info(f"\n{'='*70}")
+    logger.info(f"📁 SOLICITUD DE CARGA MASIVA")
+    logger.info(f"{'='*70}")
+    logger.info(f"📦 Total archivos: {len(files)}")
     
     file_processing_progress["is_processing"] = True
     file_processing_progress["total_files"] = len(files)
     file_processing_progress["processed_files"] = 0
     
     if len(files) > MAX_FILES_PER_BATCH:
-        print(f"❌ RECHAZO: Demasiados archivos ({len(files)} > {MAX_FILES_PER_BATCH})")
+        logger.error(f"❌ RECHAZO: Demasiados archivos ({len(files)} > {MAX_FILES_PER_BATCH})")
         file_processing_progress["is_processing"] = False
         return JSONResponse(
             status_code=400,
@@ -499,7 +517,7 @@ async def upload_batch(files: list[UploadFile] = File(...)):
     errors = 0
     
     for idx, file in enumerate(files, 1):
-        print(f"\n[{idx}/{len(files)}] Procesando: {file.filename}")
+        logger.info(f"\n[{idx}/{len(files)}] Procesando: {file.filename}")
         
         file_processing_progress["current_file"] = file.filename
         file_processing_progress["processed_files"] = idx - 1
@@ -510,7 +528,7 @@ async def upload_batch(files: list[UploadFile] = File(...)):
         try:
             file_ext = Path(file.filename).suffix.lower()
             if file_ext not in ['.xlsx', '.xls', '.pdf']:
-                print(f"   ❌ Extensión no permitida")
+                logger.info(f"   ❌ Extensión no permitida")
                 results.append({
                     "file": file.filename,
                     "status": "error",
@@ -529,7 +547,7 @@ async def upload_batch(files: list[UploadFile] = File(...)):
             file_size_mb = temp_path.stat().st_size / (1024 * 1024)
             if file_size_mb > MAX_FILE_SIZE_MB:
                 temp_path.unlink()
-                print(f"   ❌ Archivo muy grande ({file_size_mb:.2f}MB)")
+                logger.info(f"   ❌ Archivo muy grande ({file_size_mb:.2f}MB)")
                 results.append({
                     "file": file.filename,
                     "status": "error",
@@ -539,14 +557,14 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 errors += 1
                 continue
             
-            print(f"   ✅ Guardado ({file_size_mb:.2f}MB)")
+            logger.info(f"   ✅ Guardado ({file_size_mb:.2f}MB)")
             
             file_hash = calculate_file_hash(temp_path)
             
             duplicate_check = is_file_already_uploaded(file_hash)
             if duplicate_check["is_duplicate"]:
                 temp_path.unlink()
-                print(f"   ⚠️  DUPLICADO")
+                logger.info(f"   ⚠️  DUPLICADO")
                 results.append({
                     "file": file.filename,
                     "status": "duplicate",
@@ -556,9 +574,9 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 duplicates += 1
                 continue
             
-            print(f"   🔍 Detectando institución y tipo...")
+            logger.info(f"   🔍 Detectando institución y tipo...")
             detection = file_detector.detect_from_file(str(temp_path))
-            print(f"   🏦 {detection['institution']} - {detection['product_type']} (confianza: {detection['confidence']})")
+            logger.info(f"   🏦 {detection['institution']} - {detection['product_type']} (confianza: {detection['confidence']})")
             
             movements = []
             if file_ext == '.pdf':
@@ -571,7 +589,7 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 
             if not movements:
                 temp_path.unlink()
-                print(f"   ❌ Sin movimientos")
+                logger.info(f"   ❌ Sin movimientos")
                 results.append({
                     "file": file.filename,
                     "status": "error",
@@ -599,7 +617,7 @@ async def upload_batch(files: list[UploadFile] = File(...)):
             processed_path = PROCESSED_DIR / file.filename
             shutil.move(str(temp_path), str(processed_path))
             
-            print(f"   ✅ ÉXITO: {len(movements)} movimientos")
+            logger.info(f"   ✅ ÉXITO: {len(movements)} movimientos")
             results.append({
                 "file": file.filename,
                 "status": "success",
@@ -615,7 +633,7 @@ async def upload_batch(files: list[UploadFile] = File(...)):
             total_movements += len(movements)
             
         except Exception as e:
-            print(f"   ❌ ERROR: {str(e)}")
+            logger.info(f"   ❌ ERROR: {str(e)}")
             if temp_path and temp_path.exists():
                 temp_path.unlink()
             
@@ -627,14 +645,14 @@ async def upload_batch(files: list[UploadFile] = File(...)):
             })
             errors += 1
     
-    print(f"\n{'='*70}")
-    print(f"📊 RESUMEN DE CARGA MASIVA")
-    print(f"{'='*70}")
-    print(f"✅ Exitosos: {successful}")
-    print(f"⚠️  Duplicados: {duplicates}")
-    print(f"❌ Errores: {errors}")
-    print(f"📈 Total movimientos: {total_movements}")
-    print(f"{'='*70}\n")
+    logger.info(f"\n{'='*70}")
+    logger.info(f"📊 RESUMEN DE CARGA MASIVA")
+    logger.info(f"{'='*70}")
+    logger.info(f"✅ Exitosos: {successful}")
+    logger.warning(f"⚠️  Duplicados: {duplicates}")
+    logger.error(f"❌ Errores: {errors}")
+    logger.info(f"📈 Total movimientos: {total_movements}")
+    logger.info(f"{'='*70}\n")
     
     file_processing_progress["progress"] = 100
     file_processing_progress["message"] = "✅ Carga completada"
@@ -736,8 +754,9 @@ async def activate_file(file_hash: str):
         file_info = uploaded_files_registry[file_hash]
         active_files.add(file_hash)
         save_active_files()
+        invalidate_movements_cache()
         
-        print(f"✅ Activado: {file_info['nombre']}")
+        logger.info(f"✅ Activado: {file_info['nombre']}")
         
         return {
             "status": "success",
@@ -763,8 +782,9 @@ async def deactivate_file(file_hash: str):
         file_info = uploaded_files_registry[file_hash]
         active_files.discard(file_hash)
         save_active_files()
+        invalidate_movements_cache()
         
-        print(f"⏸️  Desactivado: {file_info['nombre']}")
+        logger.info(f"⏸️  Desactivado: {file_info['nombre']}")
         
         return {
             "status": "success",
@@ -799,8 +819,9 @@ async def delete_uploaded_file(file_hash: str):
         
         del uploaded_files_registry[file_hash]
         save_registry()
+        invalidate_movements_cache()
         
-        print(f"🗑️  Eliminado: {filename}")
+        logger.info(f"🗑️  Eliminado: {filename}")
         
         return {
             "status": "success",
@@ -814,66 +835,89 @@ async def delete_uploaded_file(file_hash: str):
         )
 
 @app.get("/movements")
-async def get_movements():
-    """Retorna movimientos de archivos activos con IDs únicos"""
+async def get_movements(
+    page: int = Query(default=1, ge=1, description="Número de página"),
+    page_size: int = Query(default=0, ge=0, description="Elementos por página (0 = todos)"),
+):
+    """Retorna movimientos de archivos activos con IDs únicos y soporte de paginación."""
     global movements_db
-    
-    all_movements = []
-    
-    print(f"\n📊 Obteniendo movimientos...")
-    print(f"   Archivos activos: {len(active_files)} de {len(uploaded_files_registry)}")
-    
-    for file_hash in active_files:
-        if file_hash in uploaded_files_registry:
-            file_info = uploaded_files_registry[file_hash]
-            filename = file_info['nombre']
-            
-            file_path = PROCESSED_DIR / filename
-            if file_path.exists():
-                try:
-                    if filename.lower().endswith('.pdf'):
-                        movements = file_reader.read_pdf(str(file_path))
-                    else:
-                        movements = file_reader.read_xlsx(str(file_path))
-                    
-                    # ✅ GENERAR IDs ÚNICOS (con índice)
-                    movements = enrich_movements_with_ids(movements, filename)
-                    
-                    if movements:
-                        for movement in movements:
-                            mov_id = movement.get('id')
-                            
-                            # ✅ Buscar en la BD si tiene cambios guardados
-                            if mov_id in movements_db:
-                                db_mov = movements_db[mov_id]
-                                movement['categoria'] = db_mov.get('categoria', '')
-                                movement['subcategoria'] = db_mov.get('subcategoria', '')
-                            else:
-                                cat = movement.get('categoria', '').strip()
-                                subcat = movement.get('subcategoria', '').strip()
-                                
-                                if not cat or cat.lower() == 'sin categoría':
-                                    movement['categoria'] = ''
-                                    movement['subcategoria'] = ''
+
+    cache_key = "all_movements"
+    with _movements_cache_lock:
+        cached = _movements_cache.get(cache_key)
+
+    if cached is None:
+        all_movements: list = []
+        logger.info("📊 Recargando movimientos desde archivos...")
+        logger.info("   Archivos activos: %d de %d", len(active_files), len(uploaded_files_registry))
+
+        for file_hash in active_files:
+            if file_hash in uploaded_files_registry:
+                file_info = uploaded_files_registry[file_hash]
+                filename = file_info["nombre"]
+
+                file_path = PROCESSED_DIR / filename
+                if file_path.exists():
+                    try:
+                        if filename.lower().endswith(".pdf"):
+                            movements = file_reader.read_pdf(str(file_path))
+                        else:
+                            movements = file_reader.read_xlsx(str(file_path))
+
+                        movements = enrich_movements_with_ids(movements, filename)
+
+                        if movements:
+                            for movement in movements:
+                                mov_id = movement.get("id")
+
+                                if mov_id in movements_db:
+                                    db_mov = movements_db[mov_id]
+                                    movement["categoria"] = db_mov.get("categoria", "")
+                                    movement["subcategoria"] = db_mov.get("subcategoria", "")
                                 else:
-                                    movement['categoria'] = cat
-                                    movement['subcategoria'] = subcat
-                            
-                            movement['institucion'] = file_info.get('institucion', 'unknown')
-                            movement['tipo_producto'] = file_info.get('tipo_producto', 'unknown')
-                        
-                        print(f"   ✅ {filename}: {len(movements)} movimientos")
-                        all_movements.extend(movements)
-                except Exception as e:
-                    print(f"   ❌ {filename}: Error - {e}")
-    
-    print(f"   Total: {len(all_movements)} movimientos\n")
-    
+                                    cat = movement.get("categoria", "").strip()
+                                    subcat = movement.get("subcategoria", "").strip()
+
+                                    if not cat or cat.lower() == "sin categoría":
+                                        movement["categoria"] = ""
+                                        movement["subcategoria"] = ""
+                                    else:
+                                        movement["categoria"] = cat
+                                        movement["subcategoria"] = subcat
+
+                                movement["institucion"] = file_info.get("institucion", "unknown")
+                                movement["tipo_producto"] = file_info.get("tipo_producto", "unknown")
+
+                            logger.info("   ✅ %s: %d movimientos", filename, len(movements))
+                            all_movements.extend(movements)
+                    except Exception as e:
+                        logger.error("   ❌ %s: Error - %s", filename, e)
+
+        logger.info("   Total: %d movimientos", len(all_movements))
+
+        with _movements_cache_lock:
+            _movements_cache[cache_key] = all_movements
+        cached = all_movements
+
+    total = len(cached)
+
+    if page_size and page_size > 0:
+        start = (page - 1) * page_size
+        end = start + page_size
+        page_movements = cached[start:end]
+        total_pages = (total + page_size - 1) // page_size
+    else:
+        page_movements = cached
+        total_pages = 1
+
     return {
         "status": "success",
-        "total_movimientos": len(all_movements),
+        "total_movimientos": total,
         "archivos_activos": len(active_files),
-        "movimientos": all_movements
+        "pagina": page,
+        "pagina_size": page_size or total,
+        "total_paginas": total_pages,
+        "movimientos": page_movements,
     }
 
 @app.get("/health")
@@ -908,9 +952,9 @@ async def delete_all_files():
         save_registry()
         save_active_files()
 
-        print("\n" + "="*70)
-        print("🗑️  TODOS LOS ARCHIVOS HAN SIDO ELIMINADOS")
-        print("="*70 + "\n")
+        logger.info("\n" + "="*70)
+        logger.info("🗑️  TODOS LOS ARCHIVOS HAN SIDO ELIMINADOS")
+        logger.info("="*70 + "\n")
 
         return {
             "status": "success",
@@ -1004,13 +1048,13 @@ async def find_similar_movements(request: dict):
                                     })
                     
                     except Exception as e:
-                        print(f"⚠️  Error procesando {filename}: {e}")
+                        logger.warning(f"⚠️  Error procesando {filename}: {e}")
         
         similar_movements.sort(
             key=lambda x: (x['tipo_similitud'] != 'Exacta', -x['similitud'])
         )
         
-        print(f"✅ {len(similar_movements)} similares encontrados para: '{descripcion}'")
+        logger.info(f"✅ {len(similar_movements)} similares encontrados para: '{descripcion}'")
         
         return JSONResponse(
             status_code=200,
@@ -1028,9 +1072,7 @@ async def find_similar_movements(request: dict):
         )
     
     except Exception as e:
-        print(f"❌ Error en find_similar: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("❌ Error en find_similar: %s", e, exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}
@@ -1051,7 +1093,7 @@ async def batch_categorize_movements(request: dict):
                 content={"status": "error", "message": "Lista vacía"}
             )
         
-        print(f"\n🔄 Actualizando {len(movements_to_update)} movimientos")
+        logger.info(f"\n🔄 Actualizando {len(movements_to_update)} movimientos")
         
         updated_count = 0
         
@@ -1061,7 +1103,7 @@ async def batch_categorize_movements(request: dict):
             subcategoria = update_data.get('subcategoria')
             descripcion = update_data.get('descripcion', '')
             
-            print(f"   ✅ {descripcion[:50]}... → {categoria} / {subcategoria}")
+            logger.info(f"   ✅ {descripcion[:50]}... → {categoria} / {subcategoria}")
             
             movements_db[mov_id] = {
                 'categoria': categoria,
@@ -1078,12 +1120,12 @@ async def batch_categorize_movements(request: dict):
                         subcategoria=subcategoria
                     )
                 except Exception as e:
-                    print(f"⚠️  Error aprendiendo patrón: {e}")
+                    logger.warning(f"⚠️  Error aprendiendo patrón: {e}")
             
             updated_count += 1
         
         save_movements_db(movements_db)
-        print(f"💾 Guardados {updated_count} movimientos en BD")
+        logger.info(f"💾 Guardados {updated_count} movimientos en BD")
         
         return JSONResponse(
             status_code=200,
@@ -1096,9 +1138,7 @@ async def batch_categorize_movements(request: dict):
         )
         
     except Exception as e:
-        print(f"❌ Error en batch_categorize: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("❌ Error en batch_categorize: %s", e, exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"status": "error", "message": str(e)}
@@ -1187,7 +1227,7 @@ async def get_categorization_stats():
             }
         )
     except Exception as e:
-        print(f"❌ Error obteniendo estadísticas: {str(e)}")
+        logger.error(f"❌ Error obteniendo estadísticas: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={
@@ -1256,7 +1296,7 @@ async def add_category(request: dict):
             with open(categories_path, 'w', encoding='utf-8') as f:
                 json.dump(categories_data, f, ensure_ascii=False, indent=2)
             
-            print(f"✅ Categoría '{categoria}' agregada")
+            logger.info(f"✅ Categoría '{categoria}' agregada")
             return JSONResponse(
                 status_code=200,
                 content={
@@ -1301,7 +1341,7 @@ async def delete_category(request: dict):
                 with open(categories_path, 'w', encoding='utf-8') as f:
                     json.dump(categories_data, f, ensure_ascii=False, indent=2)
                 
-                print(f"✅ Categoría '{categoria}' eliminada")
+                logger.info(f"✅ Categoría '{categoria}' eliminada")
                 return JSONResponse(
                     status_code=200,
                     content={"status": "success", "message": f"Categoría '{categoria}' eliminada"}
@@ -1356,7 +1396,7 @@ async def add_subcategory(request: dict):
             with open(categories_path, 'w', encoding='utf-8') as f:
                 json.dump(categories_data, f, ensure_ascii=False, indent=2)
             
-            print(f"✅ Subcategoría '{subcategoria}' agregada a '{categoria}'")
+            logger.info(f"✅ Subcategoría '{subcategoria}' agregada a '{categoria}'")
             return JSONResponse(
                 status_code=200,
                 content={
@@ -1409,7 +1449,7 @@ async def delete_subcategory(request: dict):
                 with open(categories_path, 'w', encoding='utf-8') as f:
                     json.dump(categories_data, f, ensure_ascii=False, indent=2)
                 
-                print(f"✅ Subcategoría '{subcategoria}' eliminada de '{categoria}'")
+                logger.info(f"✅ Subcategoría '{subcategoria}' eliminada de '{categoria}'")
                 return JSONResponse(
                     status_code=200,
                     content={"status": "success", "message": "Subcategoría eliminada"}
