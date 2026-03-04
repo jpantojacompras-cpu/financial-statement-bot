@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Save, Check, AlertCircle, Search, X, CheckCircle2 } from 'lucide-react';
 import { Movement } from '../types/Movement';
 import SimilarMovementsModal from './SimilarMovementsModal';
@@ -71,6 +71,29 @@ export default function CategorizeMovements({
     };
     fetchCategories();
   }, []);
+
+  // ✅ AGREGAR: Debug de IDs de movimientos
+  useEffect(() => {
+    console.log('📊 MOVIMIENTOS RECIBIDOS EN COMPONENTE:');
+    console.log('Total:', movements.length);
+    console.log('Primeros 3 movimientos:');
+    movements.slice(0, 3).forEach((mov, idx) => {
+      console.log(`  [${idx}] ID: "${mov.id}" (tipo: ${typeof mov.id}), Desc: ${mov.descripcion}`);
+    });
+    
+    // ✅ VERIFICAR IDs ÚNICOS
+    const ids = movements.map(m => String(m.id));
+    const uniqueIds = new Set(ids);
+    console.log(`Movimientos totales: ${ids.length}, IDs únicos: ${uniqueIds.size}`);
+    
+    if (ids.length !== uniqueIds.size) {
+      console.error('❌ HAY IDs DUPLICADOS!');
+      const duplicados = ids.filter((id, idx) => ids.indexOf(id) !== idx);
+      console.error('IDs duplicados:', [...new Set(duplicados)]);
+    } else {
+      console.log('✅ Todos los IDs son únicos');
+    }
+  }, [movements]);
 
   // ✅ Función auxiliar para verificar si está sin categorizar
   const isUncategorized = (categoria: any): boolean => {
@@ -154,73 +177,73 @@ export default function CategorizeMovements({
 
   // Guardar directamente sin buscar similares
   const handleSaveDirectly = useCallback(async (movId: string | number) => {
-  try {
-    const movIdStr = String(movId);
-    const changeData = changes[movIdStr];
+    try {
+      const movIdStr = String(movId);
+      const changeData = changes[movIdStr];
 
-    if (!changeData) {
-      showToast('⚠️ No hay cambios para guardar', 'info');
-      return;
-    }
-
-    const movement = movements.find(m => String(m.id) === movIdStr);
-    if (!movement) {
-      showToast('❌ Movimiento no encontrado', 'error');
-      return;
-    }
-
-    const updates = [{
-      movement_id: movIdStr,
-      descripcion: movement.descripcion,
-      categoria: changeData.categoria,
-      subcategoria: changeData.subcategoria,
-    }];
-
-    console.log('📤 Guardando directamente:', updates);
-
-    const response = await fetch('http://localhost:8000/movements/batch-categorize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        movements: updates,
-        learn: false,
-      }),
-    });
-
-    const result = await response.json();
-    console.log('✅ Respuesta del servidor:', result);
-
-    if (result.status === 'success') {
-      const updatedMovements = movements.map(mov => {
-        if (String(mov.id) === movIdStr) {
-          return {
-            ...mov,
-            categoria: changeData.categoria,
-            subcategoria: changeData.subcategoria,
-          };
-        }
-        return mov;
-      });
-
-      setChanges(prev => {
-        const newChanges = { ...prev };
-        delete newChanges[movIdStr];
-        return newChanges;
-      });
-
-      if (onMovementsUpdate) {
-        onMovementsUpdate(updatedMovements);
+      if (!changeData) {
+        showToast('⚠️ No hay cambios para guardar', 'info');
+        return;
       }
 
-      showToast('✅ Movimiento guardado correctamente', 'success');
-    } else {
-      showToast(`❌ Error: ${result.message}`, 'error');
+      const movement = movements.find(m => String(m.id) === movIdStr);
+      if (!movement) {
+        showToast('❌ Movimiento no encontrado', 'error');
+        return;
+      }
+
+      const updates = [{
+        movement_id: movIdStr,
+        descripcion: movement.descripcion,
+        categoria: changeData.categoria,
+        subcategoria: changeData.subcategoria,
+      }];
+
+      console.log('📤 Guardando directamente:', updates);
+
+      const response = await fetch('http://localhost:8000/movements/batch-categorize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          movements: updates,
+          learn: false,
+        }),
+      });
+
+      const result = await response.json();
+      console.log('✅ Respuesta del servidor:', result);
+
+      if (result.status === 'success') {
+        const updatedMovements = movements.map(mov => {
+          if (String(mov.id) === movIdStr) {
+            return {
+              ...mov,
+              categoria: changeData.categoria,
+              subcategoria: changeData.subcategoria,
+            };
+          }
+          return mov;
+        });
+
+        setChanges(prev => {
+          const newChanges = { ...prev };
+          delete newChanges[movIdStr];
+          return newChanges;
+        });
+
+        if (onMovementsUpdate) {
+          onMovementsUpdate(updatedMovements);
+        }
+
+        showToast('✅ Movimiento guardado correctamente', 'success');
+      } else {
+        showToast(`❌ Error: ${result.message}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('❌ Error al guardar', 'error');
     }
-  } catch (error) {
-    console.error('Error:', error);
-    showToast('❌ Error al guardar', 'error');
-  }
-}, [changes, movements, onMovementsUpdate, showToast]);
+  }, [changes, movements, onMovementsUpdate, showToast]);
 
   // Buscar similares
   const handleSaveAll = useCallback(async () => {
@@ -276,89 +299,72 @@ export default function CategorizeMovements({
   }, [changes, movements, showToast]);
 
   // Confirmar y guardar similares
-const handleConfirmSimilars = useCallback(async (selectedIds: (string | number)[]) => {
-  try {
-    setSaving(true);
-    setSavingMessage('Guardando cambios...');
+  const handleConfirmSimilars = useCallback(async (selectedIds: (string | number)[]) => {
+    try {
+      setSaving(true);
+      setSavingMessage('Guardando cambios...');
 
-    if (!pendingChange) return;
+      if (!pendingChange) return;
 
-    const allIds = [pendingChange.movId, ...selectedIds];
-    console.log('📤 IDs a guardar (total):', allIds);
-    console.log('📤 Original ID:', pendingChange.movId);
-    console.log('📤 IDs seleccionados:', selectedIds);
+      const allIds = [pendingChange.movId, ...selectedIds];
 
-    const updates = allIds.map(id => {
-      const movement = movements.find(m => String(m.id) === String(id));
-      console.log(`🔍 Buscando movimiento con ID: "${id}" (tipo: ${typeof id})`);
-      console.log(`   Movimientos disponibles: ${movements.map(m => `${m.id}(${typeof m.id})`).join(', ')}`);
-      console.log(`   Resultado: ${movement ? 'ENCONTRADO' : 'NO ENCONTRADO'}`);
-      
-      return {
-        movement_id: String(id),
-        descripcion: movement?.descripcion || '',
-        categoria: pendingChange.categoria,
-        subcategoria: pendingChange.subcategoria,
-      };
-    });
-
-    console.log(`📤 Actualizaciones a enviar:`, updates);
-    console.log(`📤 Total movimientos a guardar: ${updates.length}`);
-
-    const response = await fetch('http://localhost:8000/movements/batch-categorize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        movements: updates,
-        learn: true,
-      }),
-    });
-
-    const result = await response.json();
-    console.log('✅ Respuesta del servidor:', result);
-    console.log(`✅ Servidor dice que guardó: ${result.updated_count} movimientos`);
-
-    if (result.status === 'success') {
-      console.log(`✅ ${result.updated_count} movimientos guardados`);
-
-      const updatedMovements = movements.map(mov => {
-        const shouldUpdate = allIds.some(id => String(id) === String(mov.id));
-        if (shouldUpdate) {
-          console.log(`✅ Actualizando localmente movimiento ${mov.id}`);
-          return {
-            ...mov,
-            categoria: pendingChange.categoria,
-            subcategoria: pendingChange.subcategoria,
-          };
-        }
-        return mov;
+      const updates = allIds.map(id => {
+        const movement = movements.find(m => String(m.id) === String(id));
+        
+        return {
+          movement_id: String(id),
+          descripcion: movement?.descripcion || '',
+          categoria: pendingChange.categoria,
+          subcategoria: pendingChange.subcategoria,
+        };
       });
 
-      console.log('🔄 Movimientos actualizados localmente:', updatedMovements.length);
+      const response = await fetch('http://localhost:8000/movements/batch-categorize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          movements: updates,
+          learn: true,
+        }),
+      });
 
-      setChanges({});
-      setShowSimilarModal(false);
-      setSimilarData(null);
-      setPendingChange(null);
-      setSaving(false);
-      setSearchQuery('');
+      const result = await response.json();
 
-      if (onMovementsUpdate) {
-        console.log('📢 Llamando onMovementsUpdate con', updatedMovements.length, 'movimientos');
-        onMovementsUpdate(updatedMovements);
+      if (result.status === 'success') {
+        const updatedMovements = movements.map(mov => {
+          const shouldUpdate = allIds.some(id => String(id) === String(mov.id));
+          if (shouldUpdate) {
+            return {
+              ...mov,
+              categoria: pendingChange.categoria,
+              subcategoria: pendingChange.subcategoria,
+            };
+          }
+          return mov;
+        });
+
+        setChanges({});
+        setShowSimilarModal(false);
+        setSimilarData(null);
+        setPendingChange(null);
+        setSaving(false);
+        setSearchQuery('');
+
+        if (onMovementsUpdate) {
+          onMovementsUpdate(updatedMovements);
+        }
+
+        showToast(`✅ ${result.updated_count} movimiento(s) guardado(s)`, 'success');
+      } else {
+        showToast(`❌ Error: ${result.message}`, 'error');
+        setSaving(false);
       }
-
-      showToast(`✅ ${result.updated_count} movimiento(s) guardado(s)`, 'success');
-    } else {
-      showToast(`❌ Error: ${result.message}`, 'error');
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('❌ Error al guardar', 'error');
       setSaving(false);
     }
-  } catch (error) {
-    console.error('Error:', error);
-    showToast('❌ Error al guardar', 'error');
-    setSaving(false);
-  }
-}, [pendingChange, movements, onMovementsUpdate, showToast]);
+  }, [pendingChange, movements, onMovementsUpdate, showToast]);
 
   return (
     <>
@@ -470,7 +476,7 @@ const handleConfirmSimilars = useCallback(async (selectedIds: (string | number)[
 
                   return (
                     <tr
-                      key={`mov-${movIdStr}`}
+                      key={movIdStr}
                       className={`border-b transition ${isChanged ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                     >
                       <td className="px-6 py-4 text-sm text-gray-900">{movement.fecha}</td>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Check, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { AlertCircle, Check, X } from 'lucide-react';
 import CompactLoadingOverlay from './CompactLoadingOverlay';
 
 interface SimilarMovement {
@@ -10,6 +10,7 @@ interface SimilarMovement {
   categoria_actual: string;
   subcategoria_actual: string;
   similitud: number;
+  tipo_similitud: string;
 }
 
 interface SimilarMovementsModalProps {
@@ -33,6 +34,20 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+const normalizarCategoria = (cat: string | null | undefined): string => {
+  if (!cat || cat.trim() === '' || cat.toLowerCase() === 'sin categoría') {
+    return '';
+  }
+  return cat.trim();
+};
+
+const normalizarSubcategoria = (subcat: string | null | undefined): string => {
+  if (!subcat || subcat.trim() === '' || subcat.toLowerCase() === 'sin subcategoría') {
+    return '';
+  }
+  return subcat.trim();
+};
+
 export default function SimilarMovementsModal({
   original,
   similares,
@@ -40,8 +55,53 @@ export default function SimilarMovementsModal({
   onCancel,
   loading = false,
 }: SimilarMovementsModalProps) {
-  // Usar índices como key en lugar de IDs
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+
+  // ✅ DEBUG: Log de datos que recibimos
+  useEffect(() => {
+    console.log('=== SIMILAR MOVEMENTS MODAL DEBUG ===');
+    console.log('Original:', original);
+    console.log('Similares count:', similares.length);
+    console.log('Primeros 3 similares:');
+    similares.slice(0, 3).forEach((mov, idx) => {
+      console.log(`  [${idx}] ID: ${mov.id}, Desc: ${mov.descripcion}`);
+      console.log(`       Cat actual: "${mov.categoria_actual}", Subcat actual: "${mov.subcategoria_actual}"`);
+    });
+  }, [original, similares]);
+
+  const newCategoria = normalizarCategoria(original.categoria);
+  const newSubcategoria = normalizarSubcategoria(original.subcategoria);
+
+  console.log('Nueva categoría a asignar:', `"${newCategoria}"`);
+  console.log('Nueva subcategoría a asignar:', `"${newSubcategoria}"`);
+
+  const filteredSimilares = useMemo(() => {
+    console.log('\n🔍 FILTRANDO...');
+    const filtered = similares.filter((mov, idx) => {
+      const actualCategoria = normalizarCategoria(mov.categoria_actual);
+      const actualSubcategoria = normalizarSubcategoria(mov.subcategoria_actual);
+      
+      const estaSinCategorizar = actualCategoria === '' && actualSubcategoria === '';
+      const categoriaEsDiferente = actualCategoria !== newCategoria;
+      const subcategoriaEsDiferente = actualSubcategoria !== newSubcategoria;
+      
+      const incluir = estaSinCategorizar || categoriaEsDiferente || subcategoriaEsDiferente;
+      
+      if (idx < 3) {
+        console.log(`  [${idx}] "${mov.descripcion}"`);
+        console.log(`       Actual: "${actualCategoria}" / "${actualSubcategoria}"`);
+        console.log(`       Sin cat: ${estaSinCategorizar}, Diff cat: ${categoriaEsDiferente}, Diff subcat: ${subcategoriaEsDiferente}`);
+        console.log(`       ➜ ${incluir ? '✅ MOSTRAR' : '❌ FILTRAR'}`);
+      }
+      
+      return incluir;
+    });
+    
+    console.log(`\nTotal: ${similares.length} → ${filtered.length} después de filtrar`);
+    return filtered;
+  }, [similares, newCategoria, newSubcategoria]);
+
+  const filteredCount = similares.length - filteredSimilares.length;
 
   const handleToggle = (idx: number) => {
     setSelectedIndices(prev => {
@@ -51,25 +111,22 @@ export default function SimilarMovementsModal({
       } else {
         newSelected.add(idx);
       }
-      console.log(`Toggle índice ${idx}, total seleccionados: ${newSelected.size}`);
       return newSelected;
     });
   };
 
   const handleSelectAll = () => {
-    if (selectedIndices.size === similares.length) {
+    if (selectedIndices.size === filteredSimilares.length) {
       setSelectedIndices(new Set());
     } else {
-      const allIndices = new Set(similares.map((_, idx) => idx));
+      const allIndices = new Set(filteredSimilares.map((_, idx) => idx));
       setSelectedIndices(allIndices);
-      console.log(`Seleccionar todos: ${allIndices.size}`);
     }
   };
 
   const handleConfirm = () => {
-    // Convertir índices de vuelta a IDs
-    const selectedIds = Array.from(selectedIndices).map(idx => similares[idx].id);
-    console.log(`Confirmando con ${selectedIds.length} IDs:`, selectedIds);
+    const selectedIds = Array.from(selectedIndices).map(idx => filteredSimilares[idx].id);
+    console.log('Confirmando con IDs:', selectedIds);
     onConfirm(selectedIds);
   };
 
@@ -88,7 +145,25 @@ export default function SimilarMovementsModal({
                 Movimientos Similares
               </h2>
               <p className="text-blue-100 text-sm mt-1">
-                Se encontraron {similares.length} movimientos con descripción similar
+                {filteredSimilares.length === 0 ? (
+                  <>
+                    ✅ Todos los similares ya tienen esta categorización
+                    {filteredCount > 0 && (
+                      <span className="ml-2 bg-green-500 px-2 py-1 rounded text-xs">
+                        ({filteredCount} movimientos)
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {filteredSimilares.length} movimiento(s) necesitan actualizar categorización
+                    {filteredCount > 0 && (
+                      <span className="ml-2 bg-blue-500 px-2 py-1 rounded text-xs">
+                        ({filteredCount} ya con esta categoría - no mostrados)
+                      </span>
+                    )}
+                  </>
+                )}
               </p>
             </div>
             <button
@@ -106,101 +181,128 @@ export default function SimilarMovementsModal({
           
           {/* Movimiento Original */}
           <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-6">
-            <h3 className="font-bold text-green-900 mb-2">✅ Movimiento Original</h3>
-            <p className="text-sm text-gray-700 mb-2">
-              <strong>Descripción:</strong> {original.descripcion}
+            <div className="flex items-center gap-2 mb-3">
+              <Check className="w-5 h-5 text-green-600" />
+              <h3 className="font-bold text-green-900">Movimiento Original</h3>
+            </div>
+            <p className="text-sm mb-2 text-gray-700">
+              <span className="font-semibold">Descripción:</span> {original.descripcion}
             </p>
             <p className="text-sm text-gray-700">
-              <strong>Nueva Categorización:</strong> {original.categoria} → {original.subcategoria}
+              <span className="font-semibold">Nueva Categorización:</span>{' '}
+              <span className="text-green-700 font-bold">
+                {newCategoria || 'Sin Categoría'} → {newSubcategoria || 'Sin Subcategoría'}
+              </span>
             </p>
           </div>
 
-          {similares.length === 0 ? (
-            <div className="text-center py-12">
-              <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">No se encontraron movimientos similares</p>
+          {filteredSimilares.length === 0 ? (
+            <div className="text-center py-12 bg-green-50 rounded-lg">
+              <Check className="w-12 h-12 text-green-500 mx-auto mb-3" />
+              <p className="text-gray-600 font-semibold">
+                ✅ Perfecto, todos los similares ya tienen esta categorización
+              </p>
+              {filteredCount > 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {filteredCount} movimiento(s) similares ya están categorizados como:{' '}
+                  <strong>{newCategoria || 'Sin Categoría'} / {newSubcategoria || 'Sin Subcategoría'}</strong>
+                </p>
+              )}
             </div>
           ) : (
             <>
-              {/* Controles */}
+              {/* Checkbox Seleccionar Todos */}
               <div className="flex items-center gap-4 mb-4 pb-4 border-b">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={selectedIndices.size === similares.length && similares.length > 0}
+                    checked={selectedIndices.size === filteredSimilares.length && filteredSimilares.length > 0}
                     onChange={handleSelectAll}
                     disabled={loading}
-                    className="w-5 h-5 cursor-pointer disabled:opacity-50"
+                    className="w-4 h-4 cursor-pointer"
                   />
-                  <span className="font-medium text-gray-700">
-                    {selectedIndices.size === similares.length && similares.length > 0
-                      ? 'Deseleccionar todos'
-                      : 'Seleccionar todos'}
-                  </span>
+                  <span className="font-semibold text-gray-700">Seleccionar todos</span>
                 </label>
-                <span className="text-gray-500 text-sm ml-auto">
-                  {selectedIndices.size} de {similares.length} seleccionados
+                <span className="text-sm text-gray-500">
+                  {selectedIndices.size} de {filteredSimilares.length} seleccionados
                 </span>
               </div>
 
-              {/* Tabla */}
+              {/* Tabla de Similares */}
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-100 border-b sticky top-0">
+                <table className="w-full">
+                  <thead className="bg-gray-100 border-b">
                     <tr>
-                      <th className="px-4 py-3 text-left w-12">
+                      <th className="px-4 py-3 text-left text-sm font-semibold w-12">
                         <input
                           type="checkbox"
-                          checked={selectedIndices.size === similares.length && similares.length > 0}
+                          checked={selectedIndices.size === filteredSimilares.length && filteredSimilares.length > 0}
                           onChange={handleSelectAll}
                           disabled={loading}
-                          className="w-4 h-4 cursor-pointer disabled:opacity-50"
+                          className="w-4 h-4"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left">Similitud</th>
-                      <th className="px-4 py-3 text-left">Fecha</th>
-                      <th className="px-4 py-3 text-left">Descripción</th>
-                      <th className="px-4 py-3 text-right">Monto</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Similitud</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Fecha</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Descripción</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold">Monto</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Categoría Actual</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {similares.map((mov, idx) => {
-                      const isChecked = selectedIndices.has(idx);
+                  <tbody className="divide-y">
+                    {filteredSimilares.map((mov, idx) => {
+                      const isSelected = selectedIndices.has(idx);
+                      const actualCat = normalizarCategoria(mov.categoria_actual);
+                      const actualSubcat = normalizarSubcategoria(mov.subcategoria_actual);
+                      const estaSinCategoria = actualCat === '' && actualSubcat === '';
+                      
                       return (
                         <tr
-                          key={`row-${idx}`}
-                          className={`border-b transition ${isChecked ? 'bg-blue-100' : 'hover:bg-gray-50'}`}
+                          key={`${mov.id}-${idx}`}
+                          className={`transition ${isSelected ? 'bg-blue-50' : estaSinCategoria ? 'hover:bg-gray-50' : 'bg-yellow-50 hover:bg-yellow-100'}`}
                         >
                           <td className="px-4 py-3">
                             <input
                               type="checkbox"
-                              checked={isChecked}
+                              checked={isSelected}
                               onChange={() => handleToggle(idx)}
                               disabled={loading}
-                              className="w-4 h-4 cursor-pointer disabled:opacity-50"
+                              className="w-4 h-4 cursor-pointer"
                             />
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-sm">
                             <div className="flex items-center gap-2">
-                              <div className="w-16 bg-gray-200 rounded-full h-2">
-                                <div
-                                  className={`h-2 rounded-full ${
-                                    mov.similitud >= 90
-                                      ? 'bg-green-500'
-                                      : mov.similitud >= 80
-                                      ? 'bg-yellow-500'
-                                      : 'bg-orange-500'
-                                  }`}
-                                  style={{ width: `${mov.similitud}%` }}
-                                />
-                              </div>
-                              <span className="font-semibold text-xs w-12">{mov.similitud}%</span>
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  mov.similitud === 100 ? 'bg-green-500' : 'bg-yellow-500'
+                                }`}
+                              />
+                              <span className="font-semibold">{mov.similitud}%</span>
+                              <span className="text-xs text-gray-500">
+                                ({mov.tipo_similitud})
+                              </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-600">{mov.fecha}</td>
-                          <td className="px-4 py-3 font-medium">{mov.descripcion}</td>
-                          <td className="px-4 py-3 font-semibold text-red-600 text-right">
+                          <td className="px-4 py-3 text-sm text-gray-700">{mov.fecha}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700 font-medium">
+                            {mov.descripcion}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-semibold text-red-600 text-right">
                             {formatCurrency(Math.abs(mov.monto))}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {estaSinCategoria ? (
+                              <span className="text-gray-400 italic text-xs">Sin categoría</span>
+                            ) : (
+                              <div className="text-xs space-y-1">
+                                <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                  {actualCat || 'Sin Categoría'}
+                                </div>
+                                <div className="text-gray-600">
+                                  {actualSubcat || 'Sin Subcategoría'}
+                                </div>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
@@ -213,22 +315,24 @@ export default function SimilarMovementsModal({
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 border-t p-6 flex items-center justify-end gap-3 sticky bottom-0 z-40">
+        <div className="bg-gray-50 p-6 border-t flex justify-end gap-3 sticky bottom-0">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition disabled:opacity-50"
           >
             Cancelar
           </button>
-          <button
-            onClick={handleConfirm}
-            disabled={loading || selectedIndices.size === 0}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg flex items-center gap-2 transition disabled:cursor-not-allowed"
-          >
-            {loading ? 'Guardando...' : `Aplicar a ${selectedIndices.size}`}
-            {!loading && <Check className="w-5 h-5" />}
-          </button>
+          {filteredSimilares.length > 0 && (
+            <button
+              onClick={handleConfirm}
+              disabled={loading || selectedIndices.size === 0}
+              className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <Check className="w-5 h-5" />
+              Aplicar a {selectedIndices.size}
+            </button>
+          )}
         </div>
       </div>
     </div>
