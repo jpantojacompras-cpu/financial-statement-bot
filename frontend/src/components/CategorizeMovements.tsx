@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Save, Check, AlertCircle, Search, X, CheckCircle2 } from 'lucide-react';
 import { Movement } from '../types/Movement';
 import SimilarMovementsModal from './SimilarMovementsModal';
@@ -37,6 +37,7 @@ export default function CategorizeMovements({
     [key: string]: { categoria: string; subcategoria: string };
   }>({});
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const toastCounterRef = useRef(0);
 
   // Modal de similares
   const [showSimilarModal, setShowSimilarModal] = useState(false);
@@ -49,7 +50,7 @@ export default function CategorizeMovements({
 
   // Función para agregar notificaciones
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    const id = Date.now().toString();
+    const id = String(++toastCounterRef.current);
     setToasts(prev => [...prev, { id, message, type }]);
   }, []);
 
