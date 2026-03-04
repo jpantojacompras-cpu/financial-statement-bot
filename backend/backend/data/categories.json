@@ -1,0 +1,74 @@
+{
+  "Alimentación": [
+    "Supermercado",
+    "Uber eats / otros",
+    "Restaurantes",
+    "Otros"
+  ],
+  "Compras": [
+    "Casa",
+    "Personales",
+    "Aliexpress / Shein",
+    "Peluquería",
+    "Tecnología",
+    "Otros"
+  ],
+  "Cuentas básicas": [
+    "Luz",
+    "Agua",
+    "Gas",
+    "Internet",
+    "Celular",
+    "Mantención CC y TC",
+    "Donación",
+    "Otros"
+  ],
+  "Deudas": [
+    "Hipotecario",
+    "Otros"
+  ],
+  "Entretención / Deporte": [
+    "Muni las condes",
+    "Gym",
+    "Cine / Teatro",
+    "Otros"
+  ],
+  "Inversiones": [
+    "DAP",
+    "Trading",
+    "Acciones",
+    "Otros",
+    "Arriendo Depto"
+  ],
+  "Mascotas": [
+    "Veterinario",
+    "Pet Shop",
+    "Otros"
+  ],
+  "Movilización": [
+    "Bencina",
+    "Autopistas",
+    "Parking",
+    "Revisión Técnica",
+    "Seguro",
+    "Bip",
+    "Otros"
+  ],
+  "Plataformas / Suscripciones": [
+    "Netlifx",
+    "Chatgpt",
+    "Spotify",
+    "Crunchyroll",
+    "Otros"
+  ],
+  "Salud": [
+    "Consultas médicas",
+    "Exámenes y Procedimientos",
+    "Seguro salud",
+    "Farmacia",
+    "Sicólogo",
+    "AFP",
+    "Isapre",
+    "otros"
+  ]
+}

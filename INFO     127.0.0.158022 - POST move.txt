@@ -1,0 +1,1031 @@
+INFO:     127.0.0.1:58022 - "POST /movements/find-similar HTTP/1.1" 200 OK
+
+🔄 Actualizando 9 movimientos
+   📝 ID: -1147786169614121667... → Inversiones / Arriendo Depto
+   📝 ID: 4... → Inversiones / Arriendo Depto
+   📝 ID: 0... → Inversiones / Arriendo Depto
+   📝 ID: 3... → Inversiones / Arriendo Depto
+   📝 ID: 3... → Inversiones / Arriendo Depto
+   📝 ID: 0... → Inversiones / Arriendo Depto
+   📝 ID: 3... → Inversiones / Arriendo Depto
+   📝 ID: 0... → Inversiones / Arriendo Depto
+   📝 ID: 0... → Inversiones / Arriendo Depto
+✅ 9 movimientos guardados en BD
+INFO:     127.0.0.1:52324 - "POST /movements/batch-categorize HTTP/1.1" 200 OK
+
+📊 Obteniendo movimientos...
+   Archivos activos: 33 de 33
+
+📄 Procesando PDF: cartola_21-72804-7_20251128_20251230.pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=40
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-12-01 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     180,000
+   ✅ [ 2] 2025-12-01 | gasto   | Transferencia Juan Carlos Pantoja Robles                     | $   2,300,000
+   ✅ [ 3] 2025-12-01 | gasto   | Transferencia Juan Carlos Pantoja Robles                     | $     949,750
+   ✅ [ 4] 2025-12-01 | gasto   | Cargo
+               | $       4,000
+   ✅ [ 5] 2025-12-01 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 6] 2025-12-02 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       2,000
+   ✅ [ 7] 2025-12-02 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     631,000
+
+=== TOTAL: 7 movimientos ===
+
+      ✅ 7 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-12-04 | gasto   | Cargo
+               | $ 160,000,000
+   ✅ [ 2] 2025-12-04 | gasto   | Cargo Dividendo
+               | $   1,873,302
+   ✅ [ 3] 2025-12-04 | gasto   | Transferencia a Tarjeta CMR
+               | $   5,000,000
+   ✅ [ 4] 2025-12-04 | gasto   | Transferencia a Tarjeta CMR
+               | $   2,000,000
+   ✅ [ 5] 2025-12-04 | ingreso | Abono
+               | $ 180,696,006
+   ✅ [ 6] 2025-12-09 | gasto   | Transferencia a Tarjeta CMR
+               | $   3,000,000
+   ✅ [ 7] 2025-12-09 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       5,000
+   ✅ [ 8] 2025-12-09 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      26,000
+   ✅ [ 9] 2025-12-10 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [10] 2025-12-15 | gasto   | Transferencia a Tarjeta CMR
+               | $     358,910
+   ✅ [11] 2025-12-16 | ingreso | Transferencia Veronika Trischler Anwandter                   | $      80,000
+   ✅ [12] 2025-12-17 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      20,400
+   ✅ [13] 2025-12-17 | ingreso | Transferencia Veronika Trischler Anwandter                   | $      35,000
+   ✅ [14] 2025-12-18 | ingreso | Abono Pago Proveedores
+               | $   1,848,663
+   ✅ [15] 2025-12-22 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       6,000
+   ✅ [16] 2025-12-24 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [17] 2025-12-26 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      30,000
+   ✅ [18] 2025-12-29 | gasto   | Cargo
+               | $      54,924
+   ✅ [19] 2025-12-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     100,000
+   ✅ [20] 2025-12-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       2,000
+   ✅ [21] 2025-12-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     631,000
+
+=== TOTAL: 21 movimientos ===
+
+      ✅ 21 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 3, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+
+=== TOTAL: 0 movimientos ===
+
+      ✅ 0 movimientos extraídos del texto
+   Total movimientos extraídos: 28
+   ✅ Cartola_21-72804-7_20251128_20251230.pdf: 28 movimientos
+
+📄 Procesando PDF: estado-de-cuenta (7).pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      DEBUG: CC count=6, Checking count=4
+      ✅ Detectado: TARJETA_CREDITO
+   Banco: SANTANDER | Tipo: TARJETA_CREDITO
+   Procesando TODAS las páginas...
+   📅 Fecha de estado: Agosto 2025
+   🔍 Buscando movimientos en 96 líneas...
+   ➜ Sección de movimientos en línea 27
+   ➜ Sección de movimientos en línea 34
+   ✅ [ 1] 2025-08-06 | ingreso | MONTO CANCELADO
+     | $       2,405
+   ✅ [ 2] 2025-08-06 | gasto   | ENERGY FITNESS CLUB
+     | $      32,408
+   ✅ [ 3] 2025-08-20 | gasto   | SANTANDER SEG FRAUD
+     | $       2,407
+   ⏹️  Fin de sección en línea 41
+   ➜ Sección de movimientos en línea 51
+   ✅ [ 4] 2025-08-25 | gasto   | COMISION DE MANTENCION
+     | $       3,145
+   ⏹️  Fin de sección en línea 94
+   Total movimientos extraídos: 4
+   Total movimientos extraídos: 4
+   ✅ estado-de-cuenta (7).pdf: 4 movimientos
+
+📄 Procesando PDF: estado-de-cuenta (4).pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      DEBUG: CC count=6, Checking count=4
+      ✅ Detectado: TARJETA_CREDITO
+   Banco: SANTANDER | Tipo: TARJETA_CREDITO
+   Procesando TODAS las páginas...
+   📅 Fecha de estado: Diciembre 2025
+   🔍 Buscando movimientos en 98 líneas...
+   ➜ Sección de movimientos en línea 27
+   ➜ Sección de movimientos en línea 34
+   ✅ [ 1] 2025-11-26 | ingreso | MONTO CANCELADO
+     | $       5,602
+   ✅ [ 2] 2025-12-05 | gasto   | PAT - CONFUTURO
+     | $     118,931
+   ✅ [ 3] 2025-11-24 | ingreso | NOTA DE CREDITO
+     | $   3,000,000
+   ⏹️  Fin de sección en línea 41
+   ➜ Sección de movimientos en línea 51
+   ✅ [ 4] 2025-12-22 | gasto   | SERVICIO USO INTERNACIONAL
+     | $      22,748
+   ✅ [ 5] 2025-12-22 | gasto   | IVA USO INTERNACIONAL
+     | $       4,322
+   ✅ [ 6] 2025-12-22 | gasto   | COMISION DE MANTENCION
+     | $       3,175
+   ⏹️  Fin de sección en línea 96
+   Total movimientos extraídos: 6
+   Total movimientos extraídos: 6
+   ✅ estado-de-cuenta (4).pdf: 6 movimientos
+
+📄 Procesando PDF: bed01153-da93-4abd-9cd4-36d0d6a75b6d.pdf
+   Total de páginas: 4
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: False
+  - 'cmr' en texto: True
+🏦 Institución detectada: cmr (confianza: 7/10)
+   Banco: CMR | Tipo: TARJETA_CREDITO
+   Procesando página 1...
+      → 4 movimientos
+   Procesando página 2...
+      → 41 movimientos
+   Procesando página 3...
+      → 36 movimientos
+   Procesando página 4...
+   Total movimientos extraídos: 81
+   ✅ bed01153-da93-4abd-9cd4-36d0d6a75b6d.pdf: 81 movimientos
+
+📄 Procesando PDF: cartola-164 (1).pdf
+   Total de páginas: 1
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: santander (confianza: 7/10) [por pantoja + cuenta corriente]
+      ✅ Detectado: CUENTA_CORRIENTE (por 'cuenta corriente ml')
+   Banco: SANTANDER | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      DEBUG: Buscando patrón CARTOLA...
+      Línea CARTOLA: pantoja.jcarlos@gmail.com CARTOLA DESDE HASTA PAGINA
+      Fechas en línea: []
+      Fechas en línea: []
+      ❌ No encontró patrón CARTOLA, intentando alternativo...
+      Todas las fechas: [('30', '10', '2025'), ('28', '11', '2025'), ('30', '04', '2026')]
+      ✅ Usando segunda fecha: Noviembre 2025
+   📅 Período de corte: Noviembre 2025
+   ⚠️ Fin de movimientos en fila 21
+   Total movimientos extraídos: 18
+   Total movimientos extraídos: 18
+   ✅ cartola-164 (1).pdf: 18 movimientos
+
+📄 Procesando PDF: cartola_21-72804-7_20251230_20260130.pdf
+   Total de páginas: 2
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=22
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2026-01-02 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 2] 2026-01-05 | gasto   | Cargo Dividendo
+               | $   1,878,128
+   ✅ [ 3] 2026-01-05 | gasto   | Cargo
+               | $ 160,000,000
+   ✅ [ 4] 2026-01-05 | gasto   | Transferencia a Tarjeta CMR
+               | $   2,679,669
+   ✅ [ 5] 2026-01-05 | ingreso | Abono
+               | $ 160,682,672
+   ✅ [ 6] 2026-01-09 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [ 7] 2026-01-14 | gasto   | Transferencia Juan Pantoja Robles
+               | $      20,000
+   ✅ [ 8] 2026-01-16 | ingreso | Abono Pago Proveedores
+               | $     218,827
+
+=== TOTAL: 8 movimientos ===
+
+      ✅ 8 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2026-01-19 | gasto   | Transferencia Juan Pantoja Robles
+               | $      38,500
+   ✅ [ 2] 2026-01-23 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       6,000
+   ✅ [ 3] 2026-01-29 | gasto   | Transferencia a Tarjeta CMR
+               | $   4,000,000
+   ✅ [ 4] 2026-01-30 | gasto   | Transferencia a Tarjeta CMR
+               | $   3,000,000
+   ✅ [ 5] 2026-01-30 | ingreso | Abono Pago Proveedores
+               | $       3,697
+   ✅ [ 6] 2026-01-30 | ingreso | Abono Pago Proveedores
+               | $      52,000
+
+=== TOTAL: 6 movimientos ===
+
+      ✅ 6 movimientos extraídos del texto
+   Total movimientos extraídos: 14
+   ✅ Cartola_21-72804-7_20251230_20260130.pdf: 14 movimientos
+
+📄 Procesando PDF: cartola_21-72804-7_20250930_20251030.pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=28
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-10-01 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     175,000
+   ✅ [ 2] 2025-10-01 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       2,000
+   ✅ [ 3] 2025-10-01 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     152,000
+   ✅ [ 4] 2025-10-02 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 5] 2025-10-06 | gasto   | Cargo
+               | $ 200,000,000
+   ✅ [ 6] 2025-10-06 | gasto   | Cargo
+               | $  22,000,000
+   ✅ [ 7] 2025-10-06 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      28,000
+
+=== TOTAL: 7 movimientos ===
+
+      ✅ 7 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-10-06 | ingreso | Abono
+               | $  18,425,846
+   ✅ [ 2] 2025-10-06 | ingreso | Abono
+               | $ 200,826,660
+   ✅ [ 3] 2025-10-10 | gasto   | Cargo
+               | $   1,866,194
+   ✅ [ 4] 2025-10-13 | ingreso | Abono Pago Proveedores
+               | $      48,178
+   ✅ [ 5] 2025-10-14 | gasto   | Transferencia a Tarjeta CMR
+               | $   2,433,100
+   ✅ [ 6] 2025-10-16 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       9,200
+   ✅ [ 7] 2025-10-16 | ingreso | Abono Pago Proveedores
+               | $   1,756,236
+   ✅ [ 8] 2025-10-17 | ingreso | Abono Pago Proveedores
+               | $      48,000
+   ✅ [ 9] 2025-10-20 | ingreso | Transferencia Hernan AndresBernales Baksai                   | $   1,162,000
+   ✅ [10] 2025-10-27 | ingreso | Abono
+               | $      33,000
+   ✅ [11] 2025-10-28 | ingreso | Transferencia Veronika Trischler Anwandter                   | $      40,000
+   ✅ [12] 2025-10-28 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [13] 2025-10-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     140,000
+   ✅ [14] 2025-10-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       2,000
+   ✅ [15] 2025-10-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     631,000
+
+=== TOTAL: 15 movimientos ===
+
+      ✅ 15 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 3, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+
+=== TOTAL: 0 movimientos ===
+
+      ✅ 0 movimientos extraídos del texto
+   Total movimientos extraídos: 22
+   ✅ Cartola_21-72804-7_20250930_20251030.pdf: 22 movimientos
+
+📄 Procesando PDF: estado-de-cuenta (3).pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      DEBUG: CC count=6, Checking count=4
+      ✅ Detectado: TARJETA_CREDITO
+   Banco: SANTANDER | Tipo: TARJETA_CREDITO
+   Procesando TODAS las páginas...
+   📅 Fecha de estado: Enero 2026
+   🔍 Buscando movimientos en 97 líneas...
+   ➜ Sección de movimientos en línea 27
+   ➜ Sección de movimientos en línea 34
+   ✅ [ 1] 2025-12-22 | gasto   | SANTANDER SEG FRAUD
+     | $       2,433
+   ✅ [ 2] 2026-01-05 | gasto   | PAT - CONFUTURO
+     | $     119,241
+   ✅ [ 3] 2026-01-09 | ingreso | MONTO CANCELADO
+     | $     149,176
+   ✅ [ 4] 2026-01-20 | gasto   | SANTANDER SEG FRAUD
+     | $       2,436
+   ⏹️  Fin de sección en línea 41
+   ➜ Sección de movimientos en línea 51
+   ✅ [ 5] 2026-01-26 | gasto   | COMISION DE MANTENCION
+     | $       3,178
+   ⏹️  Fin de sección en línea 95
+   Total movimientos extraídos: 5
+   Total movimientos extraídos: 5
+   ✅ estado-de-cuenta (3).pdf: 5 movimientos
+
+📄 Procesando PDF: cartola-163.pdf
+   Total de páginas: 1
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 4/10) [por pantoja + cuenta corriente]
+      ✅ Detectado: CUENTA_CORRIENTE (por 'cuenta corriente ml')
+   Banco: SANTANDER | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      DEBUG: Buscando patrón CARTOLA...
+      Línea CARTOLA: pantoja.jcarlos@gmail.com CARTOLA DESDE HASTA PAGINA
+      Fechas en línea: []
+      Fechas en línea: []
+      ❌ No encontró patrón CARTOLA, intentando alternativo...
+      Todas las fechas: [('30', '09', '2025'), ('30', '10', '2025'), ('30', '04', '2026')]
+      ✅ Usando segunda fecha: Octubre 2025
+   📅 Período de corte: Octubre 2025
+   ⚠️ Fin de movimientos en fila 14
+   Total movimientos extraídos: 11
+   Total movimientos extraídos: 11
+   ✅ cartola-163.pdf: 11 movimientos
+
+📄 Procesando PDF: cartola_21-72804-7_20250530_20250630.pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=29
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-06-02 | gasto   | Transferencia Daniela Alejandra Aylwin Trischler             | $     140,000
+   ✅ [ 2] 2025-06-02 | gasto   | Transferencia Daniela Alejandra Aylwin Trischler             | $     631,000
+   ✅ [ 3] 2025-06-02 | gasto   | Transferencia Daniela Alejandra Aylwin Trischler             | $       2,000
+   ✅ [ 4] 2025-06-02 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 5] 2025-06-04 | ingreso | Abono
+               | $ 175,735,000
+   ✅ [ 6] 2025-06-05 | gasto   | Cargo Dividendo
+               | $   1,852,788
+   ✅ [ 7] 2025-06-05 | ingreso | Abono
+               | $  53,052,560
+   ✅ [ 8] 2025-06-06 | gasto   | Cargo
+               | $  25,500,000
+
+=== TOTAL: 8 movimientos ===
+
+      ✅ 8 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-06-06 | gasto   | Cargo
+               | $ 200,000,000
+   ✅ [ 2] 2025-06-06 | gasto   | Transferencia a Tarjeta CMR
+               | $   2,132,705
+   ✅ [ 3] 2025-06-11 | gasto   | Transferencia Daniela Alejandra Aylwin Trischler             | $      12,340
+   ✅ [ 4] 2025-06-11 | ingreso | Abono Pago Proveedores
+               | $      11,375
+   ✅ [ 5] 2025-06-12 | gasto   | Transferencia Daniela Alejandra Aylwin Trischler             | $       5,485
+   ✅ [ 6] 2025-06-12 | gasto   | Transferencia Daniela Alejandra Aylwin Trischler             | $     250,000
+   ✅ [ 7] 2025-06-12 | ingreso | Transferencia NAW TrainingLab SpA
+               | $   1,824,931
+   ✅ [ 8] 2025-06-13 | gasto   | Transferencia Daniela Alejandra Aylwin Trischler             | $     659,723
+   ✅ [ 9] 2025-06-19 | ingreso | Abono Pago Proveedores
+               | $   3,512,471
+   ✅ [10] 2025-06-23 | ingreso | Transferencia NAW TrainingLab SpA
+               | $     202,231
+   ✅ [11] 2025-06-24 | gasto   | Transferencia Juan Carlos Pantoja Robles                     | $      55,000
+   ✅ [12] 2025-06-26 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [13] 2025-06-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     631,000
+   ✅ [14] 2025-06-30 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       2,000
+   ✅ [15] 2025-06-30 | ingreso | Abono Pago Proveedores
+               | $         233
+
+=== TOTAL: 15 movimientos ===
+
+      ✅ 15 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 3, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+
+=== TOTAL: 0 movimientos ===
+
+      ✅ 0 movimientos extraídos del texto
+   Total movimientos extraídos: 23
+   ✅ Cartola_21-72804-7_20250530_20250630.pdf: 23 movimientos
+
+📄 Procesando PDF: c28b4945-f37b-4f73-b70f-a2f5ab89b7c5.pdf
+   Total de páginas: 4
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: False
+  - 'cmr' en texto: True
+🏦 Institución detectada: cmr (confianza: 15/10)
+   Banco: CMR | Tipo: TARJETA_CREDITO
+   Procesando página 1...
+      → 4 movimientos
+   Procesando página 2...
+      → 33 movimientos
+   Procesando página 3...
+      → 55 movimientos
+   Procesando página 4...
+      → 15 movimientos
+   Total movimientos extraídos: 107
+   ✅ c28b4945-f37b-4f73-b70f-a2f5ab89b7c5.pdf: 107 movimientos
+
+📄 Procesando PDF: cartola-159.pdf
+   Total de páginas: 1
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: santander (confianza: 10/10) [por pantoja + cuenta corriente]
+      ✅ Detectado: CUENTA_CORRIENTE (por 'cuenta corriente ml')
+   Banco: SANTANDER | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      DEBUG: Buscando patrón CARTOLA...
+      Línea CARTOLA: pantoja.jcarlos@gmail.com CARTOLA DESDE HASTA PAGINA
+      Fechas en línea: []
+      Fechas en línea: []
+      ❌ No encontró patrón CARTOLA, intentando alternativo...
+      Todas las fechas: [('30', '05', '2025'), ('30', '06', '2025'), ('30', '04', '2026')]
+      ✅ Usando segunda fecha: Junio 2025
+   📅 Período de corte: Junio 2025
+   ⚠️ Fin de movimientos en fila 29
+   Total movimientos extraídos: 26
+   Total movimientos extraídos: 26
+   ✅ cartola-159.pdf: 26 movimientos
+
+📄 Procesando PDF: estado-de-cuenta (8).pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      DEBUG: CC count=6, Checking count=4
+      ✅ Detectado: TARJETA_CREDITO
+   Banco: SANTANDER | Tipo: TARJETA_CREDITO
+   Procesando TODAS las páginas...
+   📅 Fecha de estado: Julio 2025
+   🔍 Buscando movimientos en 98 líneas...
+   ➜ Sección de movimientos en línea 27
+   ➜ Sección de movimientos en línea 34
+   ✅ [ 1] 2025-06-23 | gasto   | SANTANDER SEG FRAUD
+     | $       2,405
+   ✅ [ 2] 2025-07-02 | ingreso | MONTO CANCELADO
+     | $      53,155
+   ✅ [ 3] 2025-07-06 | gasto   | ENERGY FITNESS CLUB
+     | $      32,408
+   ✅ [ 4] 2025-07-13 | ingreso | MONTO CANCELADO
+     | $      32,408
+   ✅ [ 5] 2025-07-21 | gasto   | SANTANDER SEG FRAUD
+     | $       2,405
+   ⏹️  Fin de sección en línea 41
+   ➜ Sección de movimientos en línea 51
+   ⏹️  Fin de sección en línea 96
+   Total movimientos extraídos: 5
+   Total movimientos extraídos: 5
+   ✅ estado-de-cuenta (8).pdf: 5 movimientos
+
+📄 Procesando PDF: cartola_21-72804-7_20250731_20250829.pdf
+   Total de páginas: 2
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=23
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-08-01 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 2] 2025-08-04 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     631,000
+   ✅ [ 3] 2025-08-04 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       2,000
+   ✅ [ 4] 2025-08-04 | ingreso | Abono
+               | $     243,381
+   ✅ [ 5] 2025-08-06 | gasto   | Cargo
+               | $ 200,000,000
+   ✅ [ 6] 2025-08-06 | gasto   | Cargo
+               | $  22,000,000
+   ✅ [ 7] 2025-08-06 | gasto   | Transferencia a Tarjeta CMR
+               | $   6,000,000
+   ✅ [ 8] 2025-08-06 | ingreso | Abono
+               | $  26,106,600
+
+=== TOTAL: 8 movimientos ===
+
+      ✅ 8 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-08-06 | ingreso | Abono
+               | $ 200,820,000
+   ✅ [ 2] 2025-08-12 | gasto   | Transferencia a Tarjeta CMR
+               | $   2,643,900
+   ✅ [ 3] 2025-08-12 | ingreso | Transferencia Veronika Trischler Anwandter                   | $      40,000
+   ✅ [ 4] 2025-08-13 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [ 5] 2025-08-18 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      30,000
+   ✅ [ 6] 2025-08-21 | ingreso | Abono Pago Proveedores
+               | $   2,258,017
+   ✅ [ 7] 2025-08-25 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     196,700
+   ✅ [ 8] 2025-08-26 | ingreso | Abono Pago Proveedores
+               | $      52,000
+
+=== TOTAL: 8 movimientos ===
+
+      ✅ 8 movimientos extraídos del texto
+   Total movimientos extraídos: 16
+   ✅ Cartola_21-72804-7_20250731_20250829.pdf: 16 movimientos
+
+📄 Procesando PDF: 746ba295-dec5-4e6c-97cc-681628a1ceda.pdf
+   Total de páginas: 4
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: False
+  - 'cmr' en texto: True
+🏦 Institución detectada: cmr (confianza: 14/10)
+   Banco: CMR | Tipo: TARJETA_CREDITO
+   Procesando página 1...
+      → 6 movimientos
+   Procesando página 2...
+      → 33 movimientos
+   Procesando página 3...
+      → 56 movimientos
+   Procesando página 4...
+      → 10 movimientos
+   Total movimientos extraídos: 105
+   ✅ 746ba295-dec5-4e6c-97cc-681628a1ceda.pdf: 105 movimientos
+
+📄 Procesando PDF: cartola-160.pdf
+   Total de páginas: 1
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      ✅ Detectado: CUENTA_CORRIENTE (por 'cuenta corriente ml')
+   Banco: SANTANDER | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      DEBUG: Buscando patrón CARTOLA...
+      Línea CARTOLA: pantoja.jcarlos@gmail.com CARTOLA DESDE HASTA PAGINA
+      Fechas en línea: []
+      Fechas en línea: []
+      ❌ No encontró patrón CARTOLA, intentando alternativo...
+      Todas las fechas: [('30', '06', '2025'), ('31', '07', '2025'), ('30', '04', '2026')]
+      ✅ Usando segunda fecha: Julio 2025
+   📅 Período de corte: Julio 2025
+   Total movimientos extraídos: 21
+   Total movimientos extraídos: 21
+   ✅ cartola-160.pdf: 21 movimientos
+
+📄 Procesando PDF: cartola_21-72804-7_20250829_20250930.pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=28
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-09-01 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     110,000
+   ✅ [ 2] 2025-09-01 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       2,000
+   ✅ [ 3] 2025-09-01 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     631,000
+   ✅ [ 4] 2025-09-01 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 5] 2025-09-01 | ingreso | Abono
+               | $   2,000,000
+   ✅ [ 6] 2025-09-01 | ingreso | Transferencia Hernan AndresBernales Baksai                   | $   2,500,000
+   ✅ [ 7] 2025-09-05 | gasto   | Cargo
+               | $ 200,000,000
+   ✅ [ 8] 2025-09-05 | gasto   | Cargo
+               | $  18,350,000
+
+=== TOTAL: 8 movimientos ===
+
+      ✅ 8 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-09-05 | gasto   | Cargo Dividendo
+               | $   1,863,861
+   ✅ [ 2] 2025-09-05 | gasto   | Transferencia a Tarjeta CMR
+               | $   3,000,000
+   ✅ [ 3] 2025-09-05 | gasto   | Transferencia Juan Carlos Pantoja Robles                     | $   4,000,000
+   ✅ [ 4] 2025-09-05 | ingreso | Abono
+               | $  22,088,000
+   ✅ [ 5] 2025-09-05 | ingreso | Abono
+               | $ 200,800,000
+   ✅ [ 6] 2025-09-08 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      12,706
+   ✅ [ 7] 2025-09-08 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      95,000
+   ✅ [ 8] 2025-09-08 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      40,000
+   ✅ [ 9] 2025-09-09 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [10] 2025-09-17 | gasto   | Transferencia a Tarjeta CMR
+               | $     123,330
+   ✅ [11] 2025-09-17 | ingreso | Abono Pago Proveedores
+               | $      76,000
+   ✅ [12] 2025-09-17 | ingreso | Abono Pago Proveedores
+               | $   2,007,126
+   ✅ [13] 2025-09-22 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      30,000
+   ✅ [14] 2025-09-22 | ingreso | Abono
+               | $   2,000,000
+   ✅ [15] 2025-09-30 | ingreso | Abono Pago Proveedores
+               | $      52,000
+
+=== TOTAL: 15 movimientos ===
+
+      ✅ 15 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 3, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+
+=== TOTAL: 0 movimientos ===
+
+      ✅ 0 movimientos extraídos del texto
+   Total movimientos extraídos: 23
+   ✅ Cartola_21-72804-7_20250829_20250930.pdf: 23 movimientos
+
+📄 Procesando PDF: 97212ab6-803e-4b48-8554-35a8406509b3.pdf
+   Total de páginas: 4
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: False
+  - 'cmr' en texto: True
+🏦 Institución detectada: cmr (confianza: 15/10)
+   Banco: CMR | Tipo: TARJETA_CREDITO
+   Procesando página 1...
+      → 3 movimientos
+   Procesando página 2...
+      → 32 movimientos
+   Procesando página 3...
+      → 44 movimientos
+   Procesando página 4...
+   Total movimientos extraídos: 79
+   ✅ 97212ab6-803e-4b48-8554-35a8406509b3.pdf: 79 movimientos
+
+📄 Procesando PDF: estado-de-cuenta (9).pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      DEBUG: CC count=6, Checking count=4
+      ✅ Detectado: TARJETA_CREDITO
+   Banco: SANTANDER | Tipo: TARJETA_CREDITO
+   Procesando TODAS las páginas...
+   📅 Fecha de estado: Junio 2025
+   🔍 Buscando movimientos en 96 líneas...
+   ➜ Sección de movimientos en línea 27
+   ➜ Sección de movimientos en línea 34
+   ✅ [ 1] 2025-05-25 | ingreso | MONTO CANCELADO
+     | $     247,264
+   ✅ [ 2] 2025-06-06 | gasto   | ENERGY FITNESS CLUB
+     | $      31,710
+   ✅ [ 3] 2025-06-18 | gasto   | MERPAGO*CHICKEN LOVE Y
+     | $      15,900
+   ⏹️  Fin de sección en línea 41
+   ➜ Sección de movimientos en línea 51
+   ✅ [ 4] 2025-06-23 | gasto   | COMISION DE MANTENCION
+     | $       3,140
+   ⏹️  Fin de sección en línea 94
+   Total movimientos extraídos: 4
+   Total movimientos extraídos: 4
+   ✅ estado-de-cuenta (9).pdf: 4 movimientos
+
+📄 Procesando PDF: b6408f41-7a56-4f5b-897c-0824e4658c75.pdf
+   Total de páginas: 4
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: False
+  - 'cmr' en texto: True
+🏦 Institución detectada: cmr (confianza: 29/10)
+   Banco: CMR | Tipo: TARJETA_CREDITO
+   Procesando página 1...
+      → 5 movimientos
+   Procesando página 2...
+      → 36 movimientos
+   Procesando página 3...
+      → 53 movimientos
+   Procesando página 4...
+      → 20 movimientos
+   Total movimientos extraídos: 114
+   ✅ b6408f41-7a56-4f5b-897c-0824e4658c75.pdf: 114 movimientos
+
+📄 Procesando PDF: cartola-162.pdf
+   Total de páginas: 1
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: santander (confianza: 5/10) [por pantoja + cuenta corriente]
+      ✅ Detectado: CUENTA_CORRIENTE (por 'cuenta corriente ml')
+   Banco: SANTANDER | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      DEBUG: Buscando patrón CARTOLA...
+      Línea CARTOLA: pantoja.jcarlos@gmail.com CARTOLA DESDE HASTA PAGINA
+      Fechas en línea: []
+      Fechas en línea: []
+      ❌ No encontró patrón CARTOLA, intentando alternativo...
+      Todas las fechas: [('29', '08', '2025'), ('30', '09', '2025'), ('30', '04', '2026')]
+      ✅ Usando segunda fecha: Septiembre 2025
+   📅 Período de corte: Septiembre 2025
+   Total movimientos extraídos: 20
+   Total movimientos extraídos: 20
+   ✅ cartola-162.pdf: 20 movimientos
+
+📄 Procesando PDF: cartola_21-72804-7_20250630_20250731.pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=28
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-07-01 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 2] 2025-07-02 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     140,000
+   ✅ [ 3] 2025-07-07 | gasto   | Cargo
+               | $  26,000,000
+   ✅ [ 4] 2025-07-07 | gasto   | Cargo
+               | $ 200,000,000
+   ✅ [ 5] 2025-07-07 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       7,000
+   ✅ [ 6] 2025-07-07 | ingreso | Abono
+               | $  25,610,670
+   ✅ [ 7] 2025-07-07 | ingreso | Abono
+               | $ 200,868,000
+   ✅ [ 8] 2025-07-09 | ingreso | Abono Pago Proveedores
+               | $      52,000
+
+=== TOTAL: 8 movimientos ===
+
+      ✅ 8 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-07-10 | gasto   | Cargo
+               | $   1,856,677
+   ✅ [ 2] 2025-07-10 | ingreso | Transferencia INGENIERIA DEVALOR LIMITADA                    | $     150,000
+   ✅ [ 3] 2025-07-14 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      14,650
+   ✅ [ 4] 2025-07-14 | gasto   | Transferencia a Tarjeta CMR
+               | $   2,032,250
+   ✅ [ 5] 2025-07-14 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [ 6] 2025-07-17 | ingreso | Abono Pago Proveedores
+               | $   3,010,690
+   ✅ [ 7] 2025-07-21 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       5,554
+   ✅ [ 8] 2025-07-21 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      40,000
+   ✅ [ 9] 2025-07-21 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      20,000
+   ✅ [10] 2025-07-23 | gasto   | Transferencia Juan Pantoja Robles
+               | $   1,000,000
+   ✅ [11] 2025-07-29 | gasto   | Transferencia Daniela Aylwin Trischler                       | $     140,000
+   ✅ [12] 2025-07-31 | gasto   | Transferencia Juan Pantoja Robles
+               | $      51,150
+   ✅ [13] 2025-07-31 | ingreso | Abono Pago Proveedores
+               | $         234
+   ✅ [14] 2025-07-31 | ingreso | Abono Pago Proveedores
+               | $      52,000
+
+=== TOTAL: 14 movimientos ===
+
+      ✅ 14 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 3, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+
+=== TOTAL: 0 movimientos ===
+
+      ✅ 0 movimientos extraídos del texto
+   Total movimientos extraídos: 22
+   ✅ Cartola_21-72804-7_20250630_20250731.pdf: 22 movimientos
+
+📄 Procesando PDF: cartola_21-72804-7_20251030_20251128.pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: True
+🏦 Institución detectada: bice (confianza: 1.0) [por 'BANCO BICE']
+      DEBUG: CC count=0, Checking count=38
+      ✅ Detectado: CUENTA_CORRIENTE
+   Banco: BICE | Tipo: CUENTA_CORRIENTE
+   Procesando página 1...
+      ⚠️ No se encontraron tablas en página 1, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-11-03 | ingreso | Transferencia Hernan AndresCortes Ubeda                      | $     630,000
+   ✅ [ 2] 2025-11-05 | gasto   | Cargo Dividendo
+               | $   1,872,397
+   ✅ [ 3] 2025-11-05 | gasto   | Cargo
+               | $ 180,000,000
+   ✅ [ 4] 2025-11-05 | gasto   | Transferencia Juan Carlos Pantoja Robles                     | $   3,000,000
+   ✅ [ 5] 2025-11-05 | gasto   | Transferencia Juan Carlos Pantoja Robles                     | $   3,500,000
+   ✅ [ 6] 2025-11-05 | gasto   | Transferencia a Tarjeta CMR
+               | $   3,500,000
+   ✅ [ 7] 2025-11-05 | ingreso | Abono
+               | $  22,088,000
+   ✅ [ 8] 2025-11-05 | ingreso | Abono
+               | $ 200,800,000
+
+=== TOTAL: 8 movimientos ===
+
+      ✅ 8 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 2, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+   ✅ [ 1] 2025-11-06 | gasto   | Transferencia a Tarjeta CMR
+               | $   5,779,371
+   ✅ [ 2] 2025-11-11 | gasto   | Transferencia a Tarjeta CMR
+               | $     472,700
+   ✅ [ 3] 2025-11-11 | gasto   | Transferencia a Tarjeta CMR
+               | $     373,479
+   ✅ [ 4] 2025-11-14 | gasto   | Transferencia Juan Carlos Pantoja Robles                     | $     250,000
+   ✅ [ 5] 2025-11-18 | gasto   | Transferencia a Tarjeta CMR
+               | $   6,000,000
+   ✅ [ 6] 2025-11-20 | gasto   | Transferencia a Tarjeta CMR
+               | $   6,000,000
+   ✅ [ 7] 2025-11-20 | ingreso | Abono Pago Proveedores
+               | $   1,505,345
+   ✅ [ 8] 2025-11-21 | gasto   | Transferencia a Tarjeta CMR
+               | $   6,000,000
+   ✅ [ 9] 2025-11-21 | gasto   | Transferencia a Tarjeta CMR
+               | $   1,000,000
+   ✅ [10] 2025-11-21 | gasto   | Transferencia a Tarjeta CMR
+               | $   6,000,000
+   ✅ [11] 2025-11-24 | gasto   | Transferencia Daniela Aylwin Trischler                       | $      13,400
+   ✅ [12] 2025-11-24 | gasto   | Transferencia Daniela Aylwin Trischler                       | $       8,500
+   ✅ [13] 2025-11-25 | ingreso | Abono Pago Proveedores
+               | $      52,000
+   ✅ [14] 2025-11-28 | ingreso | Abono Pago Proveedores
+               | $         237
+
+=== TOTAL: 14 movimientos ===
+
+      ✅ 14 movimientos extraídos del texto
+      ⚠️ No se encontraron tablas en página 3, usando texto...
+
+=== PARSING BICE FROM TEXT v6 ===
+
+
+=== TOTAL: 0 movimientos ===
+
+      ✅ 0 movimientos extraídos del texto
+   Total movimientos extraídos: 22
+   ✅ Cartola_21-72804-7_20251030_20251128.pdf: 22 movimientos
+
+📄 Procesando PDF: a5801f2e-543e-4b27-bd67-6fe5a4d45418.pdf
+   Total de páginas: 5
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: False
+  - 'cmr' en texto: True
+🏦 Institución detectada: cmr (confianza: 27/10)
+   Banco: CMR | Tipo: TARJETA_CREDITO
+   Procesando página 1...
+      → 2 movimientos
+   Procesando página 2...
+      → 30 movimientos
+   Procesando página 3...
+      → 54 movimientos
+   Procesando página 4...
+      → 34 movimientos
+   Procesando página 5...
+   Total movimientos extraídos: 120
+   ✅ a5801f2e-543e-4b27-bd67-6fe5a4d45418.pdf: 120 movimientos
+
+📄 Procesando PDF: estado-de-cuenta (6).pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      DEBUG: CC count=6, Checking count=4
+      ✅ Detectado: TARJETA_CREDITO
+   Banco: SANTANDER | Tipo: TARJETA_CREDITO
+   Procesando TODAS las páginas...
+   📅 Fecha de estado: Septiembre 2025
+   🔍 Buscando movimientos en 95 líneas...
+   ➜ Sección de movimientos en línea 27
+   ➜ Sección de movimientos en línea 34
+   ✅ [ 1] 2025-09-05 | ingreso | MONTO CANCELADO
+     | $      37,960
+   ✅ [ 2] 2025-09-06 | gasto   | ENERGY FITNESS CLUB
+     | $      32,408
+   ✅ [ 3] 2025-09-23 | gasto   | COMISION DE MANTENCION
+     | $       3,159
+   ⏹️  Fin de sección en línea 41
+   ➜ Sección de movimientos en línea 51
+   ⏹️  Fin de sección en línea 93
+   Total movimientos extraídos: 3
+   Total movimientos extraídos: 3
+   ✅ estado-de-cuenta (6).pdf: 3 movimientos
+
+📄 Procesando PDF: estado-de-cuenta (5).pdf
+   Total de páginas: 3
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: True
+  - 'cmr' en texto: False
+🏦 Institución detectada: santander (confianza: 6/10) [por pantoja + cuenta corriente]
+      DEBUG: CC count=6, Checking count=4
+      ✅ Detectado: TARJETA_CREDITO
+   Banco: SANTANDER | Tipo: TARJETA_CREDITO
+   Procesando TODAS las páginas...
+   📅 Fecha de estado: Noviembre 2025
+   🔍 Buscando movimientos en 101 líneas...
+   ➜ Sección de movimientos en línea 27
+   ➜ Sección de movimientos en línea 34
+   ✅ [ 1] 2025-11-04 | gasto   | PAGO ONLINE
+     | $   3,500,000
+   ✅ [ 2] 2025-11-05 | ingreso | MONTO CANCELADO
+     | $     158,873
+   ✅ [ 3] 2025-11-05 | gasto   | PAT - CONFUTURO
+     | $     118,870
+   ✅ [ 4] 2025-11-06 | gasto   | ENERGY FITNESS CLUB
+     | $      32,408
+   ✅ [ 5] 2025-11-11 | ingreso | MONTO CANCELADO
+     | $   3,651,278
+📄 Procesando PDF: 039e48a0-9c23-4dc3-9f92-3d3ecec08dc8.pdf
+   Total de páginas: 4
+DEBUG: Antes de _detect_bank():
+  - 'pantoja' en texto: True
+  - 'cuenta corriente' en texto: False
+  - 'cmr' en texto: True
+🏦 Institución detectada: cmr (confianza: 13/10)
+   Banco: CMR | Tipo: TARJETA_CREDITO
+   Procesando página 1...
+      → 4 movimientos
+   Procesando página 2...
+      → 36 movimientos
+   Procesando página 3...
+      → 45 movimientos
+   Procesando página 4...
+      → 6 movimientos
+   Total movimientos extraídos: 91
+   ✅ 039e48a0-9c23-4dc3-9f92-3d3ecec08dc8.pdf: 91 movimientos
+   Total: 1122 movimientos

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Upload, BarChart3, TrendingUp, BarChart, Files } from 'lucide-react';
+import { Upload, BarChart3, TrendingUp, BarChart, Files, FolderOpen, Tags } from 'lucide-react';
 
 interface SidebarProps {
-  currentPage: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files';
-  setCurrentPage: (page: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files') => void;
+  currentPage: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize';
+  setCurrentPage: (page: 'upload' | 'movements' | 'dashboard' | 'analysis' | 'files' | 'categories' | 'categorize') => void;
 }
 
 export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
@@ -23,6 +23,22 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
       hoverBg: 'hover:bg-blue-50',
+    },
+    {
+      id: 'categorize',
+      label: 'Categorizar',
+      icon: Tags,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-100',
+      hoverBg: 'hover:bg-yellow-50',
+    },
+    {
+      id: 'categories',
+      label: 'Categorías',
+      icon: FolderOpen,
+      color: 'text-cyan-600',
+      bgColor: 'bg-cyan-100',
+      hoverBg: 'hover:bg-cyan-50',
     },
     {
       id: 'dashboard',
