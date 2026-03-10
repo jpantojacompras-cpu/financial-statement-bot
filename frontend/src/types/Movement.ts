@@ -7,4 +7,6 @@ export interface Movement {
   archivo_referencia: string;
   categoria: string;
   subcategoria: string;
+  banco?: string;
+  tipo_cuenta?: string;
 }

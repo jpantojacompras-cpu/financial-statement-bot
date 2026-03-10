@@ -11,6 +11,8 @@ interface SimilarMovement {
   subcategoria_actual: string;
   similitud: number;
   tipo_similitud: string;
+  banco?: string;
+  tipo_cuenta?: string;
 }
 
 interface SimilarMovementsModalProps {
@@ -246,6 +248,7 @@ export default function SimilarMovementsModal({
                       <th className="px-4 py-3 text-left text-sm font-semibold">Fecha</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold">Descripción</th>
                       <th className="px-4 py-3 text-right text-sm font-semibold">Monto</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Banco</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold">Categoría Actual</th>
                     </tr>
                   </thead>
@@ -289,6 +292,9 @@ export default function SimilarMovementsModal({
                           </td>
                           <td className="px-4 py-3 text-sm font-semibold text-red-600 text-right">
                             {formatCurrency(Math.abs(mov.monto))}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">
+                            {[mov.banco, mov.tipo_cuenta].filter(Boolean).join('-') || '-'}
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {estaSinCategoria ? (
