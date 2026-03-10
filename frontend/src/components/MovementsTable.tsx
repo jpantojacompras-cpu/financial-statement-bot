@@ -6,7 +6,7 @@ interface MovementsTableProps {
   movements: Movement[];
 }
 
-type SortField = 'fecha' | 'monto' | 'tipo' | 'categoria' | 'subcategoria' | 'none';
+type SortField = 'fecha' | 'monto' | 'tipo' | 'banco' | 'categoria' | 'subcategoria' | 'none';
 type SortDirection = 'asc' | 'desc';
 
 export default function MovementsTable({ movements }: MovementsTableProps) {
@@ -51,6 +51,10 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
           case 'tipo':
             aValue = a.tipo;
             bValue = b.tipo;
+            break;
+          case 'banco':
+            aValue = (a.banco && a.tipo_cuenta ? `${a.banco}-${a.tipo_cuenta}` : a.banco || '').toLowerCase();
+            bValue = (b.banco && b.tipo_cuenta ? `${b.banco}-${b.tipo_cuenta}` : b.banco || '').toLowerCase();
             break;
           case 'categoria':
             aValue = a.categoria?.toLowerCase() || '';
@@ -142,6 +146,7 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
           <SortHeader field="fecha" label="Fecha" />
           <SortHeader field="monto" label="Monto" />
           <SortHeader field="tipo" label="Tipo" />
+          <SortHeader field="banco" label="Banco" />
           <SortHeader field="categoria" label="Categoría" />
           <SortHeader field="subcategoria" label="Subcategoría" />
         </div>
@@ -155,6 +160,7 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
               <th className="px-6 py-3 text-left text-sm font-semibold">Descripción</th>
               <th className="px-6 py-3 text-right text-sm font-semibold">Monto</th>
               <th className="px-6 py-3 text-center text-sm font-semibold">Tipo</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold">Banco</th>
               <th className="px-6 py-3 text-left text-sm font-semibold">Categoría</th>
               <th className="px-6 py-3 text-left text-sm font-semibold">Subcategoría</th>
             </tr>
@@ -181,6 +187,11 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
                   >
                     {getTipoTexto(mov.tipo)}
                   </span>
+                </td>
+                <td className="px-6 py-3 text-sm text-gray-700">
+                  {mov.banco && mov.tipo_cuenta
+                    ? `${mov.banco}-${mov.tipo_cuenta}`
+                    : mov.banco || '-'}
                 </td>
                 <td className="px-6 py-3 text-sm text-gray-700">{mov.categoria || '-'}</td>
                 <td className="px-6 py-3 text-sm text-gray-700">{mov.subcategoria || '-'}</td>

@@ -20,6 +20,7 @@ class Movement:
         subcategoria: Subcategoría del movimiento
         archivo_referencia: Nombre del archivo de origen
         banco: Nombre del banco de origen
+        tipo_cuenta: Tipo de cuenta (Cuenta Corriente, Tarjeta Crédito, etc.)
     """
     
     id: int
@@ -31,6 +32,7 @@ class Movement:
     subcategoria: Optional[str] = "Sin Subcategoría"
     archivo_referencia: Optional[str] = None
     banco: Optional[str] = None
+    tipo_cuenta: Optional[str] = None
     
     def to_dict(self):
         """Convierte el movimiento a diccionario"""
@@ -43,7 +45,8 @@ class Movement:
             'categoria': self.categoria,
             'subcategoria': self.subcategoria,
             'archivo_referencia': self.archivo_referencia,
-            'banco': self.banco
+            'banco': self.banco,
+            'tipo_cuenta': self.tipo_cuenta
         }
     
     def __str__(self):

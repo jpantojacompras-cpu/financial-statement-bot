@@ -461,6 +461,7 @@ export default function CategorizeMovements({
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Fecha</th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Descripción</th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Monto</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Banco</th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Categoría</th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Subcategoría</th>
                   <th className="px-6 py-4 text-center text-sm font-bold text-gray-900">Acciones</th>
@@ -488,6 +489,12 @@ export default function CategorizeMovements({
                       >
                         {movement.tipo === 'ingreso' ? '+' : '-'}
                         {formatCurrency(Math.abs(movement.monto))}
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {movement.banco && movement.tipo_cuenta
+                          ? `${movement.banco}-${movement.tipo_cuenta}`
+                          : movement.banco || '-'}
                       </td>
 
                       <td className="px-6 py-4">

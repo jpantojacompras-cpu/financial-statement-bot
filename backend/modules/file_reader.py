@@ -18,6 +18,22 @@ class FileReader:
     def __init__(self):
         self.supported_formats = ['.xlsx', '.pdf']
 
+    def _format_account_type(self, product_type: str) -> str:
+        """Convierte TARJETA_CREDITO -> Tarjeta Crédito, CUENTA_CORRIENTE -> Cuenta Corriente"""
+        if product_type == 'TARJETA_CREDITO':
+            return 'Tarjeta Crédito'
+        elif product_type == 'CUENTA_CORRIENTE':
+            return 'Cuenta Corriente'
+        return product_type
+
+    def _add_bank_info(self, movements: List[Dict], detection: Dict) -> None:
+        """Agrega banco y tipo_cuenta a cada movimiento usando la detección"""
+        banco = detection['bank']
+        tipo_cuenta = self._format_account_type(detection['product_type'])
+        for m in movements:
+            m['banco'] = banco
+            m['tipo_cuenta'] = tipo_cuenta
+
     def read_xlsx(self, file_path):
         """Lee un archivo Excel"""
         try:
@@ -44,6 +60,8 @@ class FileReader:
                     except:
                         continue
 
+            self._add_bank_info(movements, detection)
+
             print(f"   Total movimientos: {len(movements)}")
             return movements
 
@@ -68,6 +86,7 @@ class FileReader:
                 if detection['bank'] == 'BICE' and detection['product_type'] == 'CUENTA_CORRIENTE':
                     print(f"   Procesando página 1...")
                     movements = self._parse_bice_checking_from_pdf(file_path)
+                    self._add_bank_info(movements, detection)
                     print(f"   Total movimientos extraídos: {len(movements)}")
                     return movements
                 
@@ -75,6 +94,7 @@ class FileReader:
                 if detection['bank'] == 'SANTANDER' and detection['product_type'] == 'CUENTA_CORRIENTE':
                     print(f"   Procesando página 1...")
                     movements = self._parse_santander_with_camelot(file_path)
+                    self._add_bank_info(movements, detection)
                     print(f"   Total movimientos extraídos: {len(movements)}")
                     return movements
                 
@@ -89,6 +109,7 @@ class FileReader:
                             text_all_pages += page_text + "\n"
                     
                     movements = self._parse_santander_tarjeta_credito(text_all_pages, file_path)
+                    self._add_bank_info(movements, detection)
                     print(f"   Total movimientos extraídos: {len(movements)}")
                     return movements
                 
@@ -114,6 +135,8 @@ class FileReader:
                     if page_movements:
                         movements.extend(page_movements)
                         print(f"      → {len(page_movements)} movimientos")
+
+                self._add_bank_info(movements, detection)
 
                 print(f"   Total movimientos extraídos: {len(movements)}")
                 return movements
