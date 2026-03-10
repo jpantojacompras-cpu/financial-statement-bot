@@ -6,7 +6,7 @@ interface MovementsTableProps {
   movements: Movement[];
 }
 
-type SortField = 'fecha' | 'monto' | 'tipo' | 'categoria' | 'subcategoria' | 'none';
+type SortField = 'fecha' | 'monto' | 'tipo' | 'banco' | 'categoria' | 'subcategoria' | 'none';
 type SortDirection = 'asc' | 'desc';
 
 export default function MovementsTable({ movements }: MovementsTableProps) {
@@ -52,6 +52,10 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
             aValue = a.tipo;
             bValue = b.tipo;
             break;
+          case 'banco':
+            aValue = a.banco?.toLowerCase() || '';
+            bValue = b.banco?.toLowerCase() || '';
+            break;
           case 'categoria':
             aValue = a.categoria?.toLowerCase() || '';
             bValue = b.categoria?.toLowerCase() || '';
@@ -89,6 +93,12 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
 
   const getTipoTexto = (tipo: string) => {
     return tipo === 'ingreso' ? 'Ingreso' : 'Gasto';
+  };
+
+  const formatBanco = (mov: Movement) => {
+    if (!mov.banco && !mov.tipo_cuenta) return '-';
+    const parts = [mov.banco, mov.tipo_cuenta].filter(Boolean);
+    return parts.join('-');
   };
 
   const getUniqueKey = (mov: Movement, index: number) => {
@@ -142,6 +152,7 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
           <SortHeader field="fecha" label="Fecha" />
           <SortHeader field="monto" label="Monto" />
           <SortHeader field="tipo" label="Tipo" />
+          <SortHeader field="banco" label="Banco" />
           <SortHeader field="categoria" label="Categoría" />
           <SortHeader field="subcategoria" label="Subcategoría" />
         </div>
@@ -155,6 +166,7 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
               <th className="px-6 py-3 text-left text-sm font-semibold">Descripción</th>
               <th className="px-6 py-3 text-right text-sm font-semibold">Monto</th>
               <th className="px-6 py-3 text-center text-sm font-semibold">Tipo</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold">Banco</th>
               <th className="px-6 py-3 text-left text-sm font-semibold">Categoría</th>
               <th className="px-6 py-3 text-left text-sm font-semibold">Subcategoría</th>
             </tr>
@@ -172,7 +184,7 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
                   {formatCurrency(mov.monto)}
                 </td>
                 <td className="px-6 py-3 text-sm text-center">
-                  <span
+                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       mov.tipo === 'ingreso'
                         ? 'bg-green-100 text-green-800'
@@ -182,6 +194,7 @@ export default function MovementsTable({ movements }: MovementsTableProps) {
                     {getTipoTexto(mov.tipo)}
                   </span>
                 </td>
+                <td className="px-6 py-3 text-sm text-gray-700">{formatBanco(mov)}</td>
                 <td className="px-6 py-3 text-sm text-gray-700">{mov.categoria || '-'}</td>
                 <td className="px-6 py-3 text-sm text-gray-700">{mov.subcategoria || '-'}</td>
               </tr>

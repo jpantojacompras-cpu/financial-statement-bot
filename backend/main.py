@@ -861,6 +861,14 @@ async def get_movements():
                             
                             movement['institucion'] = file_info.get('institucion', 'unknown')
                             movement['tipo_producto'] = file_info.get('tipo_producto', 'unknown')
+                            movement['banco'] = file_info.get('institucion', '')
+                            tipo_prod = file_info.get('tipo_producto', '')
+                            if tipo_prod == 'TARJETA_CREDITO':
+                                movement['tipo_cuenta'] = 'Tarjeta Crédito'
+                            elif tipo_prod == 'CUENTA_CORRIENTE':
+                                movement['tipo_cuenta'] = 'Cuenta Corriente'
+                            else:
+                                movement['tipo_cuenta'] = tipo_prod
                         
                         print(f"   ✅ {filename}: {len(movements)} movimientos")
                         all_movements.extend(movements)
