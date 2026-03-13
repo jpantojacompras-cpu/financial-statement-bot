@@ -17,49 +17,36 @@ import uuid
 # FUNCIÓN DE GENERACIÓN DE IDs CONSISTENTES
 # =====================================================================
 
-def generate_movement_id(movement: dict, filename: str = "") -> str:
+def generate_movement_id(movement: dict) -> str:
     """
-    Genera un ID único para un movimiento usando UUID
-    Esto garantiza unicidad absoluta sin colisiones
+    Genera un ID único y determinístico para un movimiento usando UUID5.
+    Basado SÓLO en los datos del movimiento (fecha + descripcion + monto),
+    sin depender del nombre del archivo, para garantizar consistencia.
     """
-    # Usar UUID basado en el contenido + filename para reproducibilidad
-    id_str = f"{filename}|{movement.get('fecha', '')}|{movement.get('descripcion', '')}|{movement.get('monto', '')}"
-    
-    # Crear un namespace UUID basado en el contenido
-    # Así obtenemos IDs determinísticos pero únicos
-    namespace = uuid.NAMESPACE_DNS
-    mov_uuid = uuid.uuid5(namespace, id_str)
-    
+    id_str = f"{movement.get('fecha', '')}|{movement.get('descripcion', '')}|{movement.get('monto', '')}"
+    mov_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, id_str)
     return str(mov_uuid)
 
-def enrich_movements_with_ids(movements: list, filename: str = "") -> list:
-    """Añade IDs únicos a los movimientos"""
-    global movements_db
+def enrich_movements_with_ids(movements: list) -> list:
+    """
+    Añade IDs únicos y determinísticos a los movimientos.
+    Los IDs se generan a partir del contenido del movimiento (fecha + descripcion + monto),
+    por lo que el mismo movimiento siempre obtiene el mismo ID.
+    """
     seen = set()
-    
-    for idx, mov in enumerate(movements):
-        # ✅ PRIMERO: Buscar si ya existe en BD
-        existing_id = None
-        for stored_id, stored_mov in movements_db.items():
-            if (stored_mov.get('descripcion') == mov.get('descripcion') and
-                stored_mov.get('fecha') == mov.get('fecha') and
-                stored_mov.get('monto') == mov.get('monto')):
-                existing_id = stored_id
-                break
-        
-        if existing_id:
-            mov['id'] = existing_id  # ← Reutiliza el ID existente
-        elif 'id' not in mov or not mov['id']:
-            base_id = generate_movement_id(mov, filename)
+
+    for mov in movements:
+        if 'id' not in mov or not mov['id']:
+            base_id = generate_movement_id(mov)
             mov_id = base_id
             counter = 1
             while mov_id in seen:
                 mov_id = f"{base_id}-{counter}"
                 counter += 1
             mov['id'] = mov_id
-        
+
         seen.add(mov['id'])
-    
+
     return movements
 
 # =====================================================================
@@ -394,7 +381,7 @@ async def upload_file(file: UploadFile = File(...)):
             movements = file_reader.read_xlsx(str(temp_path))
         
         # ✅ GENERAR IDs CONSISTENTES
-        movements = enrich_movements_with_ids(movements, file.filename)
+        movements = enrich_movements_with_ids(movements)
         
         file_processing_progress["progress"] = 75
         file_processing_progress["message"] = f"Inicializando categorías..."
@@ -578,7 +565,7 @@ async def upload_batch(files: list[UploadFile] = File(...)):
                 movements = file_reader.read_xlsx(str(temp_path))
             
             # ✅ GENERAR IDs CONSISTENTES
-            movements = enrich_movements_with_ids(movements, file.filename)
+            movements = enrich_movements_with_ids(movements)
                 
             if not movements:
                 temp_path.unlink()
@@ -848,7 +835,7 @@ async def get_movements():
                         movements = file_reader.read_xlsx(str(file_path))
                     
                     # ✅ GENERAR IDs ÚNICOS (con índice)
-                    movements = enrich_movements_with_ids(movements, filename)
+                    movements = enrich_movements_with_ids(movements)
                     
                     if movements:
                         for movement in movements:
@@ -975,7 +962,7 @@ async def find_similar_movements(request: dict):
                             movements = file_reader.read_xlsx(str(file_path))
                         
                         # ✅ GENERAR IDs ÚNICOS
-                        movements = enrich_movements_with_ids(movements, filename)
+                        movements = enrich_movements_with_ids(movements)
                         
                         if not movements:
                             continue
