@@ -103,6 +103,7 @@ export default function CategorizeMovements({
       cat === '' ||
       cat === 'sin categoría' ||
       cat === 'sin categoria' ||
+      cat === 'uncategorized' ||      
       cat === 'seleccionar...' ||
       cat === 'Seleccionar...' ||
       cat === 'Seleccionar' ||
@@ -125,18 +126,21 @@ export default function CategorizeMovements({
         return isUncatNow;
       });
     } else if (filter === 'categorized') {
-      return movements.filter(m => {
-        const movIdStr = String(m.id);
-        const hasChanges = !!changes[movIdStr];
-        
-        if (hasChanges) return false;
-        
-        return !isUncategorized(m.categoria);
-      });
+      return movements.filter(m => !isUncategorized(m.categoria));
     } else {
       return movements;
     }
   }, [movements, filter, changes]);
+
+  // 🔍 DEBUG DEL FILTRO
+  useEffect(() => {
+    console.log('🔍 FILTRO ACTUAL:', filter);
+    console.log('📊 Movimientos totales:', movements.length);
+    console.log('✅ Sin categorizar:', movements.filter(m => isUncategorized(m.categoria)).length);
+    console.log('✅ Categorizados:', movements.filter(m => !isUncategorized(m.categoria)).length);
+    console.log('📋 Mostrados por filtro:', filteredByTab.length);
+    console.log('Primeros 3 en filteredByTab:', filteredByTab.slice(0, 3).map(m => ({id: m.id, cat: m.categoria})));
+  }, [filteredByTab, filter, movements]);
 
   // ✅ Filtrar por búsqueda
   const displayMovements = useMemo(() => {

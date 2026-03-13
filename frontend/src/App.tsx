@@ -59,8 +59,12 @@ function AppContent() {
     setMovements(newMovements);
   };
 
-  const handleMovementsUpdate = () => {
-    fetchMovements();
+  const handleMovementsUpdate = (updatedMovements?: Movement[]) => {
+    if (updatedMovements) {
+      setMovements(updatedMovements);  // Actualizar localmente
+    } else {
+      fetchMovements();  // Si no hay movimientos, recarga todo
+    }
   };
 
   if (loading) {
@@ -133,7 +137,7 @@ function AppContent() {
           )}
 
           {currentPage === 'files' && (
-            <FileManager />
+            <FileManager onFilesChanged={handleMovementsUpdate} />
           )}
 
           {movements.length === 0 && currentPage !== 'upload' && currentPage !== 'files' && currentPage !== 'categories' && (

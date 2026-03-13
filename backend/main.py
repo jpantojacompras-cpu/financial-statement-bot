@@ -34,20 +34,31 @@ def generate_movement_id(movement: dict, filename: str = "") -> str:
 
 def enrich_movements_with_ids(movements: list, filename: str = "") -> list:
     """Añade IDs únicos a los movimientos"""
+    global movements_db
     seen = set()
+    
     for idx, mov in enumerate(movements):
-        if 'id' not in mov or not mov['id']:
+        # ✅ PRIMERO: Buscar si ya existe en BD
+        existing_id = None
+        for stored_id, stored_mov in movements_db.items():
+            if (stored_mov.get('descripcion') == mov.get('descripcion') and
+                stored_mov.get('fecha') == mov.get('fecha') and
+                stored_mov.get('monto') == mov.get('monto')):
+                existing_id = stored_id
+                break
+        
+        if existing_id:
+            mov['id'] = existing_id  # ← Reutiliza el ID existente
+        elif 'id' not in mov or not mov['id']:
             base_id = generate_movement_id(mov, filename)
-            
-            # Si por alguna razón hay colisión, agregar sufijo
             mov_id = base_id
             counter = 1
             while mov_id in seen:
                 mov_id = f"{base_id}-{counter}"
                 counter += 1
-            
             mov['id'] = mov_id
-            seen.add(mov_id)
+        
+        seen.add(mov['id'])
     
     return movements
 
@@ -843,11 +854,16 @@ async def get_movements():
                         for movement in movements:
                             mov_id = movement.get('id')
                             
-                            # ✅ Buscar en la BD si tiene cambios guardados
+                           # ✅ NORMALIZADOR DE CATEGORÍAS
                             if mov_id in movements_db:
                                 db_mov = movements_db[mov_id]
-                                movement['categoria'] = db_mov.get('categoria', '')
-                                movement['subcategoria'] = db_mov.get('subcategoria', '')
+                                cat = db_mov.get('categoria', '').strip().lower()
+                                if cat == 'sin categoría' or cat == 'sin categoria' or not cat:
+                                    movement['categoria'] = ''
+                                    movement['subcategoria'] = ''
+                                else:
+                                    movement['categoria'] = db_mov.get('categoria', '')
+                                    movement['subcategoria'] = db_mov.get('subcategoria', '')
                             else:
                                 cat = movement.get('categoria', '').strip()
                                 subcat = movement.get('subcategoria', '').strip()
